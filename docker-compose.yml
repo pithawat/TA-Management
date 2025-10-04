@@ -1,0 +1,32 @@
+services:
+  db:
+    image: postgres:16.1
+    container_name: TA-management_db
+    restart: always
+    environment: 
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin1234
+      POSTGRES_DB: mydatabase
+    ports:
+      - 5434:5432
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    restart: always
+    environment: 
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "8082:80"
+    volumes:
+      # - pgadmin-data:/var/lib/pgadmin/
+      - ./servers.json:/pgadmin4/servers.json
+    depends_on:
+      - db
+
+volumes:
+  db_data:

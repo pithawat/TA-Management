@@ -1,0 +1,13 @@
+{
+    "Servers":{
+        "1":{
+            "Name": "TA-management",
+            "Group": "Servers",
+            "Host": "db",
+            "Port": 5432,
+            "Username": "admin",
+            "SSLMode": "prefer",
+            "MaintenanceDB":"mydatabase"
+        }
+    }
+}
