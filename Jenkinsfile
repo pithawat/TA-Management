@@ -11,7 +11,7 @@ pipeline {
                 script {
                     echo "Starting Docker validation on Test Environment: ${env.NODE_NAME}"
                     // Run the 'hello-world' container
-                    sh 'docker run --rm hello-world'
+                    sh 'sudo docker run --rm hello-world'
                     echo "Test environment check passed."
                 }
             }
@@ -33,7 +33,7 @@ pipeline {
                     echo "Starting Docker validation on Production Environment: ${env.NODE_NAME}"
                     
                     // Run the 'hello-world' container
-                    sh 'docker run --rm hello-world'
+                    sh 'sudo docker run --rm hello-world'
                     
                     echo "Production environment check passed."
                 }
