@@ -1,6 +1,5 @@
 pipeline {
     agent none 
-
     stages {
         // --- STAGE 1: Test Environment ---
         stage('Docker Test on VM-TEST') {
