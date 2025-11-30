@@ -1,11 +1,15 @@
 package main
 
 import (
+	"TA-management/internal/logs"
 	router "TA-management/internal/routers"
 	"net/http"
 )
 
 func main() {
+	log := logs.InitializeLogger()
+	defer logs.SyncLogger(log)
+
 	routes := router.InitRouter()
 
 	server := &http.Server{

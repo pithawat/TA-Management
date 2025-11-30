@@ -10,7 +10,7 @@ import (
 )
 
 func InitRouter() *gin.Engine {
-	r := gin.New()
+	r := gin.Default()
 
 	db := config.ConnectDatabase()
 
