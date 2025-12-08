@@ -2,8 +2,8 @@ package service
 
 import (
 	"TA-management/internal/modules/course/dto/request"
-	"TA-management/internal/modules/course/dto/response"
 	"TA-management/internal/modules/course/repository"
+	"TA-management/internal/modules/shared/dto/response"
 	"fmt"
 )
 
@@ -15,13 +15,13 @@ func NewCourseService(repo repository.CourseRepository) CourseServiceImplementat
 	return CourseServiceImplementation{repo: repo}
 }
 
-func (s CourseServiceImplementation) GetAllCourse() (*response.GeneralResponse, error) {
+func (s CourseServiceImplementation) GetAllCourse() (*response.RequestDataResponse, error) {
 
 	courses, err := s.repo.GetAllCourse()
 	if err != nil {
 		return nil, err
 	}
-	response := response.GeneralResponse{
+	response := response.RequestDataResponse{
 		Data:    courses,
 		Message: "Success",
 	}

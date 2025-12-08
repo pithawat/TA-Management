@@ -2,28 +2,77 @@ package router
 
 import (
 	"TA-management/config"
-	"TA-management/internal/modules/course/controller"
-	"TA-management/internal/modules/course/repository"
-	"TA-management/internal/modules/course/service"
+	middleware "TA-management/internal/middlewares"
+	coursecontroller "TA-management/internal/modules/course/controller"
+	courserepo "TA-management/internal/modules/course/repository"
+	courseservice "TA-management/internal/modules/course/service"
+	"TA-management/internal/utils"
+	"os"
+
+	authencontroller "TA-management/internal/modules/authen/controller"
+	authenrepo "TA-management/internal/modules/authen/repository"
+	authenservice "TA-management/internal/modules/authen/service"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 )
+
+var (
+	clientID     string
+	clientSecret string
+	redirectURL  string
+	jwtSecret    []byte
+	cookieDomain string
+)
+var googleOAuthConfig *oauth2.Config
 
 func InitRouter() *gin.Engine {
 	r := gin.Default()
 
 	db := config.ConnectDatabase()
 
-	courseRepo := repository.NewCourseRepository(db)
-	courseService := service.NewCourseService(courseRepo)
-	// courseController := controller.NewCourseController(courseService)
+	_ = godotenv.Load()
+
+	clientID = os.Getenv("GOOGLE_CLIENT_ID")
+	clientSecret = os.Getenv("GOOGLE_CLIENT_SECRET")
+	redirectURL = utils.GetenvDefault("GOOGLE_REDIRECT_URL", "http://localhost:8084/TA-management/auth/google/callback")
+	jwtSecret = []byte(utils.GetenvDefault("JWT_SECRET", "change-me-please"))
+	cookieDomain = os.Getenv("COOKIE_DOMAIN")
+
+	// ====== OAuth2 config ======
+	googleOAuthConfig = &oauth2.Config{
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		RedirectURL:  redirectURL,
+		Scopes: []string{
+			"openid",
+			"email",
+			"profile",
+		},
+		Endpoint: google.Endpoint,
+	}
+
+	courseRepo := courserepo.NewCourseRepository(db)
+	courseService := courseservice.NewCourseService(courseRepo)
+
+	authRepo := authenrepo.NewAuthenRepository(db)
+	authService := authenservice.NewAuthenService(authRepo, googleOAuthConfig, jwtSecret)
 
 	baseRouter := r.Group("/TA-management")
 
-	baseRouter.Use()
+	authRouter := baseRouter.Group("/auth")
 	{
-		courseRouter := baseRouter.Group("/course")
-		controller.InitializeController(courseService, courseRouter)
+		authencontroller.InitializeController(authService, googleOAuthConfig, authRouter)
+	}
+
+	//authenticated routes Group
+	authenticatedRouter := baseRouter.Group("")
+	authenticatedRouter.Use(middleware.AuthMiddleware(jwtSecret))
+	{
+		courseRouter := authenticatedRouter.Group("/course")
+		coursecontroller.InitializeController(courseService, courseRouter)
 	}
 
 	return r

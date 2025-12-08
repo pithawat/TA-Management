@@ -2,10 +2,10 @@ package service
 
 import (
 	"TA-management/internal/modules/course/dto/request"
-	"TA-management/internal/modules/course/dto/response"
+	"TA-management/internal/modules/shared/dto/response"
 )
 
 type CourseService interface {
-	GetAllCourse() (*response.GeneralResponse, error)
+	GetAllCourse() (*response.RequestDataResponse, error)
 	CreateCourse(body request.CreateCourse) error
 }
