@@ -22,7 +22,12 @@ func InitTestDB() *sql.DB {
 	// } else {
 	// 	log.Println("--- DEBUG CWD: Running tests from:", cwd) // Look at this path!
 	// }
-	loadEnvFile()
+	if os.Getenv("DB_TEST_HOST") == "" {
+		// Not in Docker, load .env file
+		loadEnvFile()
+	} else {
+		log.Println("Using environment variables from docker-compose")
+	}
 	// // db_host := os.Getenv("DB_TEST_HOST")
 	// // fmt.Print("host :", db_host)
 
