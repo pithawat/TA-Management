@@ -41,11 +41,11 @@
       # Environment variables injected into the Go test runner
       environment:
         # Use the Docker service name 'test_db' for the host name
-        DB_HOST: test_db
-        DB_PORT: 5432
-        DB_USER: test_user
-        DB_PASSWORD: test_password
-        DB_NAME: ta_management_test
+        DB_TEST_HOST: test_db
+        DB_TEST_PORT: 5432
+        DB_TEST_USER: test_user
+        DB_TEST_PASSWORD: test_password
+        DB_TEST_NAME: ta_management_test
         
       # Depend on the DB being healthy
       depends_on:

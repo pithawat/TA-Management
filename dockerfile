@@ -30,6 +30,7 @@ RUN go mod download
 
 # Copy all application code for running tests
 COPY . .
+RUN rm -f .env 
 
 # Install PostgreSQL client for healthchecks/debugging within the test container (optional)
 # RUN apk add --no-cache postgresql-client
