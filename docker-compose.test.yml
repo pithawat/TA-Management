@@ -55,12 +55,3 @@ services:
     # Ensure the container exits with the result code of the 'go test' command
     profiles: ["test"]
 
----
-
-### How to Run the Integration Tests
-
-1.  Ensure you have your `test/init_test.sql` file set up with the necessary `CREATE TABLE` and initial `INSERT` statements (Professors, Statuses, etc.).
-2.  Run the following command from your terminal:
-
-```bash
-docker compose -f docker-compose.test.yml up --build --exit-code-from app_test
