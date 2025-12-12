@@ -130,7 +130,7 @@ pipeline {
                     docker stop $APP_NAME || true
                     docker rm $APP_NAME || true
 
-                    docker run -d --name $APP_NAME -p 8084:8080 ${FULL_IMAGE_NAME}
+                    docker run -d --name $APP_NAME -p 8084:8084 ${FULL_IMAGE_NAME}
 
                   
                     docker compose up -d
