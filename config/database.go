@@ -20,6 +20,13 @@ func ConnectDatabase() *sql.DB {
 	db_user := os.Getenv("DB_USER")
 	db_name := os.Getenv("DB_NAME")
 
+	log.Printf("=== Database Connection Config ===")
+	log.Printf("DB_TEST_HOST: %s", db_host)
+	log.Printf("DB_TEST_PORT: %s", db_port)
+	log.Printf("DB_TEST_USER: %s", db_user)
+	log.Printf("DB_TEST_NAME: %s", db_name)
+	log.Printf("=================================")
+
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		db_host, db_port, db_user, os.Getenv("DB_TEST_PASSWORD"), db_name)
 	// connStr := "host=localhost port=5434 user=admin password=admin1234 dbname=mydatabase sslmode=disable"
