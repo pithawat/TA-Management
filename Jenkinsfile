@@ -49,7 +49,7 @@ pipeline {
         steps{
             script{
                 echo "Starting Dockerized Integration Tests..."
-
+                sh "docker compose -f ${TEST_DB_COMPOSE} down -v"
                 // This command runs the test runner and waits for its exit code.
                 sh "docker compose -f ${TEST_DB_COMPOSE} --profile test up --build --force-recreate --abort-on-container-exit --exit-code-from app_test"
 
