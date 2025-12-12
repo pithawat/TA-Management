@@ -26,7 +26,7 @@ services:
       retries: 5
     
     networks:
-      - test_network
+      - test_db_network
 
   # ----------------------------------------
   # B. The Go Application Test Runner Service
@@ -56,11 +56,14 @@ services:
     command: go test ./... -v -coverprofile=coverage.out
     
     networks:
-      - test_network
+      - test_app_network
 
 networks:
-  test_network:
+  test_app_network:
     driver: bridge
-    name: ta_test_network
+    name: ta_app_network
+  test_db_network:
+    driver: bridge
+    name: ta_db_network
 
 
