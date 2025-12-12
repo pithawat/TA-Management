@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -21,7 +22,7 @@ func InitTestDB() *sql.DB {
 	} else {
 		log.Println("--- DEBUG CWD: Running tests from:", cwd) // Look at this path!
 	}
-	_ = godotenv.Load()
+	loadEnvFile()
 	db_host := os.Getenv("DB_TEST_HOST")
 	fmt.Print("host :", db_host)
 	connStr := os.ExpandEnv("host=$DB_TEST_HOST port=$DB_TEST_PORT user=$DB_TEST_USER password=$DB_TEST_PASSWORD dbname=$DB_TEST_NAME sslmode=disable")
@@ -36,4 +37,36 @@ func InitTestDB() *sql.DB {
 		panic("Failed to ping to database: " + err.Error())
 	}
 	return testDB
+}
+
+func loadEnvFile() {
+	// Start from current working directory
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Println("Could not get working directory:", err)
+		return
+	}
+
+	// Try to find .env file by going up directories
+	for {
+		envPath := filepath.Join(dir, ".env")
+		if _, err := os.Stat(envPath); err == nil {
+			// Found .env file
+			if err := godotenv.Load(envPath); err != nil {
+				log.Printf("Error loading .env from %s: %v", envPath, err)
+			} else {
+				log.Printf("Loaded .env from: %s", envPath)
+			}
+			return
+		}
+
+		// Move up one directory
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			// Reached root, stop searching
+			log.Println("No .env file found, using environment variables")
+			return
+		}
+		dir = parent
+	}
 }

@@ -13,7 +13,8 @@ services:
       POSTGRES_PASSWORD: test_password
       POSTGRES_DB: ta_management_test
     # NOTE: We don't need to expose ports unless we want to debug from the host machine
-    
+    ports:
+      - 5436:5432
     volumes:
       - ./test_init.sql:/docker-entrypoint-initdb.d/init.sql
       
@@ -38,7 +39,7 @@ services:
     environment:
       # Use the Docker service name 'test_db' for the host name
       DB_HOST: test_db
-      DB_PORT: 5432
+      DB_PORT: 5436
       DB_USER: test_user
       DB_PASSWORD: test_password
       DB_NAME: ta_management_test
