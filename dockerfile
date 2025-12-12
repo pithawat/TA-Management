@@ -1,7 +1,7 @@
 # ----------------------------------------
 # STAGE 1: Base Builder (For compiling the application)
 # ----------------------------------------
-FROM golang:1.21-alpine AS builder
+FROM golang:1.24-alpine AS builder
 WORKDIR /app
 
 # Install git for module dependency fetching (if needed)
@@ -20,8 +20,9 @@ RUN CGO_ENABLED=0 go build -o ta-management .
 # ----------------------------------------
 # STAGE 2: Test Builder (Includes testing dependencies)
 # ----------------------------------------
-FROM golang:1.21-alpine AS test-builder
+FROM golang:1.24-alpine AS test-builder
 WORKDIR /app
+
 
 # Copy module files and download dependencies
 COPY go.mod go.sum ./

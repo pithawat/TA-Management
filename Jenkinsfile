@@ -62,7 +62,7 @@ pipeline {
         when{ expression {return currentBuild.result == "SUCCESS"}}
         steps{
             script{
-                withCredentials([usernamePassword(credentialsId: 'ghcr-creds', usernameVariable: 'GH_USER', passwordVariable: 'GH_PAT')])
+                withCredentials([usernamePassword(credentialsId: 'ghcr-creds', usernameVariable: 'GH_USER', passwordVariable: 'GH_PAT')]){
                 sh """
                     echo "Logging into Github container Registry..."
                     echo \$GH_PAT | docker login ghcr.io -u \$GH_USER --password-stdin
@@ -75,6 +75,7 @@ pipeline {
                 """
             }
             echo "Image successfully pushed to GHCR."
+            }
         }
     }
 
