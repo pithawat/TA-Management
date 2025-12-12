@@ -75,8 +75,8 @@ pipeline {
                     echo "Logging into Github container Registry..."
                     echo \$GH_PAT | docker login ghcr.io -u \$GH_USER --password-stdin
 
-                    echo "Tagging image ${IMAGE_NAME} to ${FULL_IMAGE_NAME}"
-                    docker tag ${IMAGE_NAME} ${FULL_IMAGE_NAME}
+                    echo "Tagging image ${DOCKER_IMAGE_TAG} to ${FULL_IMAGE_NAME}"
+                    docker tag ${DOCKER_IMAGE_TAG} ${FULL_IMAGE_NAME}
 
                     echo "Pushing image to GHCR..."
                     docker push ${FULL_IMAGE_NAME}
