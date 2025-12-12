@@ -132,9 +132,17 @@ pipeline {
 
                     docker run -d --name $APP_NAME -p 8084:8084 ${FULL_IMAGE_NAME}
 
-                  
-                
                 """
+            }
+        }
+    }
+
+    stage('start DB'){
+        agent {label 'vm-db'}
+        steps{
+            script{
+                echo "Run DB container"
+                sh "docker compose up -d"
             }
         }
     }
