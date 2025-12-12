@@ -110,7 +110,7 @@ pipeline {
                     docker stop $APP_NAME || true
                     docker rm $APP_NAME || true
 
-                    docker run -d --name $APP_NAME -p 8080:8080 ${FULL_IMAGE_NAME}
+                    docker run -d --name $APP_NAME -p 8084:8080 ${FULL_IMAGE_NAME}
                 """
             }
          }
@@ -130,7 +130,7 @@ pipeline {
                     docker stop $APP_NAME || true
                     docker rm $APP_NAME || true
 
-                    docker run -d --name $APP_NAME -p 8080:8080 ${FULL_IMAGE_NAME}
+                    docker run -d --name $APP_NAME -p 8084:8080 ${FULL_IMAGE_NAME}
 
                     //run db prod
                     docker compose up -d
