@@ -103,6 +103,9 @@ pipeline {
                 sh """
                     echo "Logging into Github container Registry..."
                     echo \$GH_PAT | docker login ghcr.io -u \$GH_USER --password-stdin
+                    sh 'whoami'
+                    sh 'groups'
+                    sh 'ls -l /var/run/docker.sock'
                     docker pull ${FULL_IMAGE_NAME}
 
                     docker stop $APP_NAME || true
