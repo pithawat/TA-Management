@@ -24,6 +24,9 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    
+    networks:
+      - test_network
 
   # ----------------------------------------
   # B. The Go Application Test Runner Service
@@ -52,5 +55,11 @@ services:
     # The command that runs the integration tests (includes repository and service tests)
     command: go test ./... -v -coverprofile=coverage.out
     
+    networks:
+      - test_network
+networks:
+  test_network:
+    driver: bridge
+    name: ta_test_network
 
 
