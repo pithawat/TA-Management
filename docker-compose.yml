@@ -13,20 +13,48 @@ services:
       - db_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: pgadmin
-    restart: always
-    environment: 
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin123
-    ports:
-      - "8082:80"
+  test_db:
+    image: postgres:15-alpine
+    container_name: ta_test_db
+    environment:
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+      POSTGRES_DB: ta_management_test
+    ports: 
+      - "5436:5432"
     volumes:
-      # - pgadmin-data:/var/lib/pgadmin/
-      - ./servers.json:/pgadmin4/servers.json
-    depends_on:
-      - db
+      - ./test_init.sql:/docker-entrypoint-initdb.d/init.sql
 
+  # pgadmin:
+  #   image: dpage/pgadmin4
+  #   container_name: pgadmin
+  #   restart: always
+  #   environment: 
+  #     PGADMIN_DEFAULT_EMAIL: admin@admin.com
+  #     PGADMIN_DEFAULT_PASSWORD: admin123
+  #   ports:
+  #     - "8083:80"
+  #   volumes:
+  #     # - pgadmin-data:/var/lib/pgadmin/
+  #     - ./servers.json:/pgadmin4/servers.json
+  #   depends_on:
+  #     - db
+
+  # app_test:
+  #   build:
+  #     context: . # Build from the Dockerfile in the current directory
+  #     target: test-builder # Use a multi-stage target specifically for testing
+  #   environment:
+  #     # Inject test environment variables for the Go test code to connect
+  #     DB_HOST: test_db
+  #     DB_PORT: 5432
+  #     DB_USER: test_user
+  #     DB_PASSWORD: test_password
+  #     DB_NAME: ta_management_test
+  #   depends_on:
+  #     test_db:
+  #       condition: service_healthy # IMPORTANT: Wait for the DB to be fully ready
+  #   # Command to run the Go tests once the DB is healthy
+  #   command: go test ./repository -v -coverprofile=coverage.out
 volumes:
   db_data:

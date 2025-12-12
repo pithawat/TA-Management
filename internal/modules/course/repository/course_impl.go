@@ -4,6 +4,8 @@ import (
 	"TA-management/internal/modules/course/dto/request"
 	"TA-management/internal/modules/course/dto/response"
 	"database/sql"
+	"errors"
+	"fmt"
 )
 
 type CourseRepositoryImplementation struct {
@@ -40,12 +42,40 @@ func (r CourseRepositoryImplementation) GetAllCourse() ([]response.Course, error
 
 func (r CourseRepositoryImplementation) CreateCourse(body request.CreateCourse) error {
 
-	query := "INSERT INTO courses(course_ID, course_name, created_date, created_by) values ($1,$2,$3,$4)"
-	_, err := r.db.Exec(query,
+	queryCheck := "SELECT COUNT(*) FROM courses WHERE course_ID=$1 AND course_program_ID=$2 AND sec=$3 AND semester_ID=$4 "
+
+	var count int
+
+	row := r.db.QueryRow(queryCheck,
+		body.CourseID,
+		body.CourseProgramID,
+		body.Sec,
+		body.SemesterID,
+	)
+
+	err := row.Scan(&count)
+	if err != nil {
+		return fmt.Errorf("failed to scan duplicate check result:%w", err)
+	}
+
+	if count > 0 {
+		return errors.New("course already exists")
+	}
+
+	query := "INSERT INTO courses(course_ID, course_name,professor_ID, course_program_ID, course_program, sec, semester_ID, semester, class_day_ID, class_day, class_start, class_end) values ($1,$2,$3, $4, $5 ,$6 ,$7 ,$8 ,$9 ,$10 ,$11 ,$12)"
+	_, err = r.db.Exec(query,
 		body.CourseID,
 		body.CourseName,
-		body.CreatedDate,
-		"linkky",
+		body.ProfessorID,
+		body.CourseProgramID,
+		body.CourseProgram,
+		body.Sec,
+		body.SemesterID,
+		body.Semester,
+		body.ClassdayID,
+		body.Classday,
+		body.ClassStart,
+		body.ClassEnd,
 	)
 
 	if err != nil {
