@@ -23,7 +23,7 @@ pipeline {
                 file(credentialsId: 'DOT_ENV_FILE', variable: 'ENV_PATH')
             ]){
                 sh ('''
-                    cp "${ENV_PATH}" ./.env
+                    mv "${ENV_PATH}" ./.env
                     ls -al ./.env
                 ''')
             }
