@@ -50,16 +50,24 @@ pipeline {
             script{
                 echo "Starting Dockerized Integration Tests..."
                 sh "docker compose -f ${TEST_DB_COMPOSE} down -v"
-                // This command runs the test runner and waits for its exit code.
-                sh "docker compose -f ${TEST_DB_COMPOSE} --profile test up --build --force-recreate --abort-on-container-exit --exit-code-from app_test"
+              // Capture exit code
+                def testExitCode = sh(
+                    script: "docker compose -f ${TEST_DB_COMPOSE} up --build --force-recreate --abort-on-container-exit --exit-code-from app_test",
+                    returnStatus: true
+                )
+                
+                // Check if tests failed
+                if (testExitCode != 0) {
+                    error("Integration tests failed with exit code: ${testExitCode}")
+                }
+                
+                echo "✅ All integration tests passed!"
 
             }
         }
     }
 
     stage('Publish Image'){
-
-        when{ expression {return currentBuild.result == "SUCCESS"}}
         steps{
             script{
                 withCredentials([usernamePassword(credentialsId: 'ghcr-creds', usernameVariable: 'GH_USER', passwordVariable: 'GH_PAT')]){
