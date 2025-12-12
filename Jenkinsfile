@@ -23,6 +23,13 @@ pipeline {
         }
     }
 
+    stage('Pull Image') {
+            steps {
+                // This command now works because the socket is accessible
+                sh 'docker pull golang:latest' 
+            }
+        }
+        
     stage('Configure Enviroment and Run Tests'){
         steps{
             withCredentials([
