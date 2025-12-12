@@ -1,5 +1,11 @@
 pipeline {
-   agent any
+   agent {
+        docker {
+            image 'golang:latest' // or your build image
+            // This is the key option: mount the host socket
+            args '-v /var/run/docker.sock:/var/run/docker.sock' 
+        }
+    }
 
    environment {
     TEST_DB_COMPOSE = 'docker-compose.test.yml'
