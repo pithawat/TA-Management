@@ -100,16 +100,16 @@ pipeline {
             echo "Deploying ${FULL_IMAGE_NAME} to Production Environment: ${env.NODE_NAME}"
 
             withCredentials([usernamePassword(credentialsId: 'ghcr-creds', usernameVariable: 'GH_USER', passwordVariable: 'GH_PAT')]){
-                sh '''
+                sh """
                     echo "Logging into Github container Registry..."
                     echo \$GH_PAT | docker login ghcr.io -u \$GH_USER --password-stdin
-                    docker pull \$FULL_IMAGE_NAME
+                    docker pull ${FULL_IMAGE_NAME}
 
                     docker stop $CONTAINER_NAME || true
                     docker rm $CONTAINER_NAME || true
 
                     docker run -d --name $CONTAINER_NAME -p 8080:8080 $REGISTRY/$IMAGE_NAME:$TAG
-                '''
+                """
             }
          }
     }
@@ -120,7 +120,7 @@ pipeline {
             echo "Deploying ${FULL_IMAGE_NAME} to Production Environment: ${env.NODE_NAME}"
 
             withCredentials([usernamePassword(credentialsId: 'ghcr-creds', usernameVariable: 'GH_USER', passwordVariable: 'GH_PAT')]){
-                sh '''
+                sh """
                     echo "Logging into Github container Registry..."
                     echo \$GH_PAT | docker login ghcr.io -u \$GH_USER --password-stdin
                     docker pull ${FULL_IMAGE_NAME}
@@ -132,7 +132,7 @@ pipeline {
 
                     //run db prod
                     docker compose up -d
-                '''
+                """
             }
         }
     }
