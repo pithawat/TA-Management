@@ -132,7 +132,7 @@ pipeline {
 
                     docker run -d --name $APP_NAME -p 8084:8080 ${FULL_IMAGE_NAME}
 
-                    //run db prod
+                  
                     docker compose up -d
                 """
             }
