@@ -22,7 +22,7 @@ func InitTestDB() *sql.DB {
 	// } else {
 	// 	log.Println("--- DEBUG CWD: Running tests from:", cwd) // Look at this path!
 	// }
-	// loadEnvFile()
+	loadEnvFile()
 	// // db_host := os.Getenv("DB_TEST_HOST")
 	// // fmt.Print("host :", db_host)
 
