@@ -39,7 +39,7 @@ services:
     environment:
       # Use the Docker service name 'test_db' for the host name
       DB_HOST: test_db
-      DB_PORT: 5436
+      DB_PORT: 5432
       DB_USER: test_user
       DB_PASSWORD: test_password
       DB_NAME: ta_management_test
