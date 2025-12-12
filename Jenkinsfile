@@ -140,6 +140,14 @@ pipeline {
     stage('start DB'){
         agent {label 'vm-db'}
         steps{
+            withCredentials([
+                file(credentialsId: 'DOT_ENV_FILE', variable: 'ENV_PATH')
+            ]){
+                sh ('''
+                    mv "${ENV_PATH}" ./.env
+                    ls -al ./.env
+                ''')
+            }
             script{
                 echo "Run DB container"
                 sh "docker compose up -d"
