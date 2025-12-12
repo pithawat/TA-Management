@@ -52,6 +52,5 @@ services:
     # The command that runs the integration tests (includes repository and service tests)
     command: go test ./... -v -coverprofile=coverage.out
     
-    # Ensure the container exits with the result code of the 'go test' command
-    profiles: ["test"]
+
 
