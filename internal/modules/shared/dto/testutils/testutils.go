@@ -2,6 +2,7 @@ package testutils
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -21,12 +22,27 @@ func InitTestDB() *sql.DB {
 	// } else {
 	// 	log.Println("--- DEBUG CWD: Running tests from:", cwd) // Look at this path!
 	// }
-	loadEnvFile()
-	// db_host := os.Getenv("DB_TEST_HOST")
-	// fmt.Print("host :", db_host)
+	// loadEnvFile()
+	// // db_host := os.Getenv("DB_TEST_HOST")
+	// // fmt.Print("host :", db_host)
 
-	connStr := os.ExpandEnv("host=$DB_TEST_HOST port=$DB_TEST_PORT user=$DB_TEST_USER password=$DB_TEST_PASSWORD dbname=$DB_TEST_NAME sslmode=disable")
-	// connStr := "host=localhost port=5436 user=test_user password=test_password dbname=ta_management_test sslmode=disable"
+	// connStr := os.ExpandEnv("host=$DB_TEST_HOST port=$DB_TEST_PORT user=$DB_TEST_USER password=$DB_TEST_PASSWORD dbname=$DB_TEST_NAME sslmode=disable")
+	// Debug: Print what we're using
+	db_host := os.Getenv("DB_TEST_HOST")
+	db_port := os.Getenv("DB_TEST_PORT")
+	db_user := os.Getenv("DB_TEST_USER")
+	db_name := os.Getenv("DB_TEST_NAME")
+
+	log.Printf("=== Database Connection Config ===")
+	log.Printf("DB_TEST_HOST: %s", db_host)
+	log.Printf("DB_TEST_PORT: %s", db_port)
+	log.Printf("DB_TEST_USER: %s", db_user)
+	log.Printf("DB_TEST_NAME: %s", db_name)
+	log.Printf("=================================")
+
+	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		db_host, db_port, db_user, os.Getenv("DB_TEST_PASSWORD"), db_name)
+
 	// var err error
 	testDB, err := sql.Open("postgres", connStr)
 	if err != nil {

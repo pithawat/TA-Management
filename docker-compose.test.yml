@@ -1,69 +1,67 @@
-version: '3.8'
+  version: '3.8'
 
-services:
-  # ----------------------------------------
-  # A. The Test Database Service (Isolated from production)
-  # ----------------------------------------
-  test_db:
-    image: postgres:15-alpine
-    container_name: ta_test_db
-    # Environment variables are what your Go test code reads for connection
-    environment:
-      POSTGRES_USER: test_user
-      POSTGRES_PASSWORD: test_password
-      POSTGRES_DB: ta_management_test
-    # NOTE: We don't need to expose ports unless we want to debug from the host machine
-    ports:
-      - 5436:5432
-    volumes:
-      - ./test_init.sql:/docker-entrypoint-initdb.d/init.sql
-      
-    # Healthcheck ensures the database is fully ready before the app_test starts
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U test_user -d ta_management_test"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    
-    networks:
-      - test_db_network
-
-  # ----------------------------------------
-  # B. The Go Application Test Runner Service
-  # ----------------------------------------
-  app_test:
-    # Build using the Dockerfile in the current directory
-    build:
-      context: . 
-      # IMPORTANT: Use the dedicated 'test-builder' stage
-      target: test-builder 
-    
-    # Environment variables injected into the Go test runner
-    # environment:
-    #   # Use the Docker service name 'test_db' for the host name
-    #   DB_HOST: test_db
-    #   DB_PORT: 5432
-    #   DB_USER: test_user
-    #   DB_PASSWORD: test_password
-    #   DB_NAME: ta_management_test
-      
-    # Depend on the DB being healthy
-    depends_on:
-      test_db:
-        condition: service_healthy 
+  services:
+    # ----------------------------------------
+    # A. The Test Database Service (Isolated from production)
+    # ----------------------------------------
+    test_db:
+      image: postgres:15-alpine
+      container_name: ta_test_db
+      # Environment variables are what your Go test code reads for connection
+      environment:
+        POSTGRES_USER: test_user
+        POSTGRES_PASSWORD: test_password
+        POSTGRES_DB: ta_management_test
+      # NOTE: We don't need to expose ports unless we want to debug from the host machine
+      ports:
+        - 5436:5432
+      volumes:
+        - ./test_init.sql:/docker-entrypoint-initdb.d/init.sql
         
-    # The command that runs the integration tests (includes repository and service tests)
-    command: go test ./... -v -coverprofile=coverage.out
-    
-    networks:
-      - test_app_network
+      # Healthcheck ensures the database is fully ready before the app_test starts
+      healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U test_user -d ta_management_test"]
+        interval: 5s
+        timeout: 5s
+        retries: 5
+      
+      networks:
+        - test_network
 
-networks:
-  test_app_network:
-    driver: bridge
-    name: ta_app_network
-  test_db_network:
-    driver: bridge
-    name: ta_db_network
+    # ----------------------------------------
+    # B. The Go Application Test Runner Service
+    # ----------------------------------------
+    app_test:
+      # Build using the Dockerfile in the current directory
+      build:
+        context: . 
+        # IMPORTANT: Use the dedicated 'test-builder' stage
+        target: test-builder 
+      
+      # Environment variables injected into the Go test runner
+      # environment:
+      #   # Use the Docker service name 'test_db' for the host name
+      #   DB_HOST: test_db
+      #   DB_PORT: 5432
+      #   DB_USER: test_user
+      #   DB_PASSWORD: test_password
+      #   DB_NAME: ta_management_test
+        
+      # Depend on the DB being healthy
+      depends_on:
+        test_db:
+          condition: service_healthy 
+          
+      # The command that runs the integration tests (includes repository and service tests)
+      command: go test ./... -v -coverprofile=coverage.out
+      
+      networks:
+        - test_network
+
+  networks:
+    test_network:
+      driver: bridge
+      name: ta_network
+
 
 
