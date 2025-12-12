@@ -1,4 +1,24 @@
 pipeline {
+    agent {
+        docker {
+            image 'golang:latest' 
+            // This is the critical line: Mounts the host's socket into the container
+            args '-v /var/run/docker.sock:/var/run/docker.sock' 
+            
+            // OPTIONAL: If permissions are still an issue, you may need to specify a user
+            // e.g., args '-v /var/run/docker.sock:/var/run/docker.sock -u 1000'
+        }
+    }
+    stages {
+        stage('Pull Image') {
+            steps {
+                // This command now works because the socket is accessible
+                sh 'docker pull golang:latest' 
+            }
+        }
+    }
+}
+pipeline {
    agent {
         docker {
             image 'golang:latest' // or your build image
@@ -23,13 +43,8 @@ pipeline {
         }
     }
 
-    stage('Pull Image') {
-            steps {
-                // This command now works because the socket is accessible
-                sh 'docker pull golang:latest' 
-            }
-        }
-        
+
+
     stage('Configure Enviroment and Run Tests'){
         steps{
             withCredentials([
