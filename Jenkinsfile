@@ -103,7 +103,7 @@ pipeline {
                 sh '''
                     echo "Logging into Github container Registry..."
                     echo \$GH_PAT | docker login ghcr.io -u \$GH_USER --password-stdin
-                    docker pull ${FULL_IMAGE_NAME}
+                    docker pull \$FULL_IMAGE_NAME
 
                     docker stop $CONTAINER_NAME || true
                     docker rm $CONTAINER_NAME || true
