@@ -105,10 +105,10 @@ pipeline {
                     echo \$GH_PAT | docker login ghcr.io -u \$GH_USER --password-stdin
                     docker pull ${FULL_IMAGE_NAME}
 
-                    docker stop $CONTAINER_NAME || true
-                    docker rm $CONTAINER_NAME || true
+                    docker stop $APP_NAME || true
+                    docker rm $APP_NAME || true
 
-                    docker run -d --name $CONTAINER_NAME -p 8080:8080 $REGISTRY/$IMAGE_NAME:$TAG
+                    docker run -d --name $APP_NAME -p 8080:8080 ${DOCKER_REGISTRY}/${FULL_IMAGE_NAME}
                 """
             }
          }
@@ -125,10 +125,10 @@ pipeline {
                     echo \$GH_PAT | docker login ghcr.io -u \$GH_USER --password-stdin
                     docker pull ${FULL_IMAGE_NAME}
 
-                    docker stop $CONTAINER_NAME || true
-                    docker rm $CONTAINER_NAME || true
+                    docker stop $APP_NAME || true
+                    docker rm $APP_NAME || true
 
-                    docker run -d --name $CONTAINER_NAME -p 8080:8080 $REGISTRY/$IMAGE_NAME:$TAG
+                    docker run -d --name $APP_NAME -p 8080:8080 ${DOCKER_REGISTRY}/${FULL_IMAGE_NAME}
 
                     //run db prod
                     docker compose up -d
