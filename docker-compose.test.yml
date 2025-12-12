@@ -15,8 +15,7 @@ services:
     # NOTE: We don't need to expose ports unless we want to debug from the host machine
     
     volumes:
-      # Mount the initialization script to set up schema and fixtures
-      - ./test/init_test.sql:/docker-entrypoint-initdb.d/init_test.sql 
+      - ./test_init.sql:/docker-entrypoint-initdb.d/init.sql
       
     # Healthcheck ensures the database is fully ready before the app_test starts
     healthcheck:
