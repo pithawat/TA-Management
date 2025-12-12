@@ -36,7 +36,7 @@ pipeline {
             script{
                 echo "Building the application binary and testing image.."
 
-                sh "docker build -t ${DOCKER_IMAGE_TAG} --target test-builder"
+                sh "docker build -t ${DOCKER_IMAGE_TAG} --target test-builder ."
 
                 sh "docker tag ${DOCKER_IMAGE_TAG} ${FULL_IMAGE_NAME}"
             }
