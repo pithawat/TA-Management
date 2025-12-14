@@ -138,13 +138,13 @@ pipeline {
                     file(credentialsId: 'DOT_ENV_FILE', variable: 'ENV_PATH')
                 ]){
                     sh """
-                        pwd
-                        mv "${ENV_PATH}" ./.env
-                        ls -al ./.env
+                        // pwd
+                        // mv "${ENV_PATH}" ./.env
+                        // ls -al ./.env
                         docker run -d \\
                         --name $APP_NAME \\
                         -p 8084:8084 \\
-                        -v "$PWD/.env":/app/.env \\
+                        --env-file "${ENV_PATH} \\
                         ${FULL_IMAGE_NAME}
                     """
                 }
