@@ -80,5 +80,5 @@ func (controller AuthController) handleLogin(ctx *gin.Context) {
 		oauth2.AccessTypeOffline,
 		oauth2.SetAuthURLParam("prompt", "consent"),
 	)
-	ctx.JSON(http.StatusOK, gin.H{"url": url})
+	ctx.String(http.StatusOK, url)
 }
