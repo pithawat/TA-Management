@@ -143,6 +143,10 @@ pipeline {
                         -p 8084:8084 \\
                         --env-file "${ENV_PATH}" \\
                         ''' + FULL_IMAGE_NAME + '''
+
+                        echo "Waiting for container to start..."
+                        sleep 5
+                        docker logs ''' + APP_NAME + ''
                     '''
                 }
             }
