@@ -74,7 +74,7 @@ pipeline {
                 sh """
                     docker build -t ${DOCKER_IMAGE_TAG} --target final .
                     docker tag ${DOCKER_IMAGE_TAG} ${FULL_IMAGE_NAME}
-                    
+
                     echo "Logging into Github container Registry..."
                     echo \$GH_PAT | docker login ghcr.io -u \$GH_USER --password-stdin
 
@@ -97,27 +97,27 @@ pipeline {
             }
     }
 
-    stage('Deploy to VM-TEST'){
-        agent {label 'vm-test'}
-        steps{
-            echo "Deploying ${FULL_IMAGE_NAME} to Production Environment: ${env.NODE_NAME}"
+    // stage('Deploy to VM-TEST'){
+    //     agent {label 'vm-test'}
+    //     steps{
+    //         echo "Deploying ${FULL_IMAGE_NAME} to Production Environment: ${env.NODE_NAME}"
 
-            withCredentials([usernamePassword(credentialsId: 'ghcr-creds', usernameVariable: 'GH_USER', passwordVariable: 'GH_PAT')]){
-                sh """
-                    echo "Logging into Github container Registry..."
-                    echo \$GH_PAT | docker login ghcr.io -u \$GH_USER --password-stdin
-                    sudo usermod -aG docker $USER
-                    newgrp docker
-                    docker pull ${FULL_IMAGE_NAME}
+    //         withCredentials([usernamePassword(credentialsId: 'ghcr-creds', usernameVariable: 'GH_USER', passwordVariable: 'GH_PAT')]){
+    //             sh """
+    //                 echo "Logging into Github container Registry..."
+    //                 echo \$GH_PAT | docker login ghcr.io -u \$GH_USER --password-stdin
+    //                 sudo usermod -aG docker $USER
+    //                 newgrp docker
+    //                 docker pull ${FULL_IMAGE_NAME}
 
-                    docker stop $APP_NAME || true
-                    docker rm $APP_NAME || true
+    //                 docker stop $APP_NAME || true
+    //                 docker rm $APP_NAME || true
 
-                    docker run -d --name $APP_NAME -p 8084:8080 ${FULL_IMAGE_NAME}
-                """
-            }
-         }
-    }
+    //                 docker run -d --name $APP_NAME -p 8084:8080 ${FULL_IMAGE_NAME}
+    //             """
+    //         }
+    //      }
+    // }
     
     stage('Deploy to VM-PROD'){
         agent {label 'vm-prod'}
@@ -132,8 +132,6 @@ pipeline {
 
                     docker stop $APP_NAME || true
                     docker rm $APP_NAME || true
-
-                   
 
                 """
             }

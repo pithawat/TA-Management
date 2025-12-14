@@ -28,7 +28,7 @@ func ConnectDatabase() *sql.DB {
 	log.Printf("=================================")
 
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		db_host, db_port, db_user, os.Getenv("DB_TEST_PASSWORD"), db_name)
+		db_host, db_port, db_user, os.Getenv("DB_PASSWORD"), db_name)
 	// connStr := "host=localhost port=5434 user=admin password=admin1234 dbname=mydatabase sslmode=disable"
 	// dsn := "postgres://admin:admin123@localhost:5432/mydatabase?sslmode=disable"
 	db, err := sql.Open("postgres", connStr)
