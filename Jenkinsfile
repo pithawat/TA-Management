@@ -72,6 +72,9 @@ pipeline {
             script{
                 withCredentials([usernamePassword(credentialsId: 'ghcr-creds', usernameVariable: 'GH_USER', passwordVariable: 'GH_PAT')]){
                 sh """
+                    docker build -t ${DOCKER_IMAGE_TAG} --target final .
+                    docker tag ${DOCKER_IMAGE_TAG} ${FULL_IMAGE_NAME}
+                    
                     echo "Logging into Github container Registry..."
                     echo \$GH_PAT | docker login ghcr.io -u \$GH_USER --password-stdin
 
@@ -143,10 +146,6 @@ pipeline {
                         -p 8084:8084 \\
                         --env-file "${ENV_PATH}" \\
                         ''' + FULL_IMAGE_NAME + '''
-
-                        echo "Waiting for container to start..."
-                        sleep 5
-                        docker logs ''' + APP_NAME + '''
                     '''
                 }
             }
