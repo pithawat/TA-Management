@@ -13,17 +13,17 @@ services:
       - db_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
-  test_db:
-    image: postgres:15-alpine
-    container_name: ta_test_db
-    environment:
-      POSTGRES_USER: test_user
-      POSTGRES_PASSWORD: test_password
-      POSTGRES_DB: ta_management_test
-    ports: 
-      - "5436:5432"
-    volumes:
-      - ./test_init.sql:/docker-entrypoint-initdb.d/init.sql
+  # test_db:
+  #   image: postgres:15-alpine
+  #   container_name: ta_test_db
+  #   environment:
+  #     POSTGRES_USER: test_user
+  #     POSTGRES_PASSWORD: test_password
+  #     POSTGRES_DB: ta_management_test
+  #   ports: 
+  #     - "5436:5432"
+  #   volumes:
+  #     - ./test_init.sql:/docker-entrypoint-initdb.d/init.sql
 
   # pgadmin:
   #   image: dpage/pgadmin4
