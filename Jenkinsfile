@@ -146,7 +146,7 @@ pipeline {
 
                         echo "Waiting for container to start..."
                         sleep 5
-                        docker logs ''' + APP_NAME + ''
+                        docker logs ''' + APP_NAME + '''
                     '''
                 }
             }
