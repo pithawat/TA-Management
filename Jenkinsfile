@@ -144,7 +144,7 @@ pipeline {
                         docker run -d \\
                         --name $APP_NAME \\
                         -p 8084:8084 \\
-                        --env-file "${ENV_PATH} \\
+                        --env-file "${ENV_PATH}" \\
                         ${FULL_IMAGE_NAME}
                     """
                 }
