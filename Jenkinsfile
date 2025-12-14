@@ -130,9 +130,19 @@ pipeline {
                     docker stop $APP_NAME || true
                     docker rm $APP_NAME || true
 
-                    docker run -d --name $APP_NAME -p 8084:8084 ${FULL_IMAGE_NAME}
+                   
 
                 """
+            }
+            withCredentials([
+                file(credentialsId: 'DOT_ENV_FILE', variable: 'ENV_PATH')
+            ]){
+                sh ('''
+                    pwd
+                    mv "${ENV_PATH}" ./.env
+                    ls -al ./.env
+                    docker run -d --name $APP_NAME -p 8084:8084 ${FULL_IMAGE_NAME}
+                ''')
             }
         }
     }
