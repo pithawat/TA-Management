@@ -144,6 +144,7 @@ pipeline {
                 file(credentialsId: 'DOT_ENV_FILE', variable: 'ENV_PATH')
             ]){
                 sh ('''
+                    pwd
                     mv "${ENV_PATH}" ./.env
                     ls -al ./.env
                 ''')
