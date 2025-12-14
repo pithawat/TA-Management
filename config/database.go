@@ -44,4 +44,3 @@ func ConnectDatabase() *sql.DB {
 	fmt.Println("Connected to Database")
 	return db
 }
-docker run --rm -it ghcr.io/pithawat/ta-management:61
