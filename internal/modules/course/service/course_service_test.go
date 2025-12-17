@@ -108,7 +108,7 @@ func TestService_CreateCourse_Integration(t *testing.T) {
 			body: baseBody, // Attempt to insert the same course again
 			setupAction: func(t *testing.T) {
 				// Pre-insert the data using the SERVICE to test the end-to-end failure path
-				err := svc.CreateCourse(baseBody)
+				_, err := svc.CreateCourse(baseBody)
 				assert.Nil(t, err, "Setup action failed to pre-insert initial course")
 			},
 			expectedError: true, // Should fail on the second attempt due to DB constraint
@@ -125,7 +125,7 @@ func TestService_CreateCourse_Integration(t *testing.T) {
 			tt.setupAction(t)
 
 			// ACT: Call the Service method (the entry point for this test)
-			err := svc.CreateCourse(tt.body)
+			_, err := svc.CreateCourse(tt.body)
 
 			// ASSERT 1: Check the error result from the Service
 			if tt.expectedError {
@@ -145,5 +145,114 @@ func TestService_CreateCourse_Integration(t *testing.T) {
 				assert.Equal(t, tt.body.ProfessorID, profID)
 			}
 		})
+	}
+}
+
+func TestService_UpdateCourse_Integration(t *testing.T) {
+	if testDB == nil {
+		t.Fatal("Test database connection (testDB) is not initialized. Check your TestMain execution.")
+	}
+
+	// 1. Setup the real service and clean the database
+	svc := setupServiceTest(t, testDB)
+	cleanDB(t, testDB, "courses")
+
+	baseBody := request.CreateCourse{
+		CourseName:      "Advanced Go Programming",
+		CourseID:        "01076203",
+		ProfessorID:     1,
+		CourseProgramID: 1,
+		CourseProgram:   "General",
+		Sec:             "101",
+		SemesterID:      1,
+		Semester:        "2/2568",
+		ClassdayID:      1,
+		Classday:        "Monday",
+		// Note: Using fixed dates or a single time.Time instance is better for testing
+		ClassStart:  time.Date(2026, time.January, 1, 9, 0, 0, 0, time.UTC),
+		ClassEnd:    time.Date(2026, time.January, 1, 12, 0, 0, 0, time.UTC),
+		CreatedDate: time.Now(),
+	}
+
+	createResult, err := svc.CreateCourse(baseBody)
+	if err != nil {
+		t.Fatalf("Failed to create initial course: %v", err)
+	}
+
+	newCorseName := "programing fundamental"
+	newCourseId := "1123456"
+	updateBody := request.UpdateCourse{
+		CourseName: &newCorseName,
+		CourseID:   &newCourseId,
+		Id:         createResult.Id,
+	}
+
+	_, err = svc.UpdateCourse(updateBody)
+	if err != nil {
+		t.Fatalf("Update course Failed : %v", err)
+	}
+
+	var updatedName string
+	var updatedId string
+
+	err = testDB.QueryRow("SELECT course_name, course_id FROM courses WHERE id = $1 ", createResult.Id).
+		Scan(&updatedName, &updatedId)
+
+	if err != nil {
+		t.Fatalf("Could not find record after update: %v", err)
+	}
+
+	if updatedName != newCorseName {
+		t.Errorf("Course mismatch. Want: %s ,got: %s", newCorseName, updatedName)
+	}
+	if updatedId != newCourseId {
+		t.Errorf("CourseId mismatch. Want:%s ,got: %s", newCourseId, updatedId)
+	}
+
+}
+func TestService_DeleteCourse_Integration(t *testing.T) {
+	if testDB == nil {
+		t.Fatal("Test database connection (testDB) is not initialized. Check your TestMain execution.")
+	}
+
+	// 1. Setup the real service and clean the database
+	svc := setupServiceTest(t, testDB)
+	cleanDB(t, testDB, "courses")
+
+	baseBody := request.CreateCourse{
+		CourseName:      "Advanced Go Programming",
+		CourseID:        "01076203",
+		ProfessorID:     1,
+		CourseProgramID: 1,
+		CourseProgram:   "General",
+		Sec:             "101",
+		SemesterID:      1,
+		Semester:        "2/2568",
+		ClassdayID:      1,
+		Classday:        "Monday",
+		// Note: Using fixed dates or a single time.Time instance is better for testing
+		ClassStart:  time.Date(2026, time.January, 1, 9, 0, 0, 0, time.UTC),
+		ClassEnd:    time.Date(2026, time.January, 1, 12, 0, 0, 0, time.UTC),
+		CreatedDate: time.Now(),
+	}
+
+	createResult, err := svc.CreateCourse(baseBody)
+	if err != nil {
+		t.Fatalf("Failed to create initial course: %v", err)
+	}
+
+	_, err = svc.DeleteCourse(createResult.Id)
+	if err != nil {
+		t.Fatalf("Failed to delete course: %v", err)
+	}
+
+	var count int
+	err = testDB.QueryRow("SELECT COUNT(*) FROM courses WHERE id = $1 AND deleted_date = NULL", createResult.Id).Scan(&count)
+
+	if err != nil {
+		t.Fatalf("Failed to find course after delete: %v", err)
+	}
+	if count != 0 {
+		t.Errorf("already Deleted but still appear! ")
 	}
 }

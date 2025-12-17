@@ -7,5 +7,7 @@ import (
 
 type CourseService interface {
 	GetAllCourse() (*response.RequestDataResponse, error)
-	CreateCourse(body request.CreateCourse) error
+	CreateCourse(body request.CreateCourse) (response.CreateResponse, error)
+	UpdateCourse(body request.UpdateCourse) (response.GeneralResponse, error)
+	DeleteCourse(courseId int) (response.GeneralResponse, error)
 }

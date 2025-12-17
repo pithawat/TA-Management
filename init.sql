@@ -27,7 +27,8 @@ CREATE TABLE courses(
     class_day VARCHAR(10) NOT NULL,
     class_start TIME NOT NULL,
     class_end TIME NOT NULL,
-    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_date TIMESTAMP
 );
 
 --verified
@@ -36,8 +37,13 @@ CREATE TABLE ta_job_posting(
     professor_ID INTEGER NOT NULL,
     task VARCHAR(200) NOT NULL,
     status_ID INTEGER NOT NULL,
-    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    delete_date TIMESTAMP
 );
+
+-- CREATE TABLE ta_application(
+
+-- )
 
 --lookup table
 

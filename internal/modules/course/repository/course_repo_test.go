@@ -54,7 +54,7 @@ func TestRepo_CreateCourse_Success(t *testing.T) {
 		CreatedDate:     time.Now(),
 	}
 
-	err := repo.CreateCourse(inputBody)
+	_, err := repo.CreateCourse(inputBody)
 
 	// ASSERT 1: No error from the repository call
 	assert.Nil(t, err)
@@ -88,10 +88,10 @@ func TestRepo_CreateCourse_FailsOnDuplicate(t *testing.T) {
 		ClassEnd:        time.Now(),
 		CreatedDate:     time.Now(),
 	}
-	err := repo.CreateCourse(inputBody)
+	_, err := repo.CreateCourse(inputBody)
 	assert.Nil(t, err, "First insert should success")
 
-	err = repo.CreateCourse(inputBody)
+	_, err = repo.CreateCourse(inputBody)
 
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "course already exists")

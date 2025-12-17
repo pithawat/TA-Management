@@ -3,6 +3,7 @@ package controller
 import (
 	"TA-management/internal/modules/course/dto/request"
 	"TA-management/internal/modules/course/service"
+	"TA-management/internal/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -24,6 +25,9 @@ func InitializeController(courseService service.CourseService, r *gin.RouterGrou
 	{
 		r.GET("", c.findAllCourse)
 		r.POST("", c.createCourse)
+		r.PATCH("/:courseId", c.updateCourse)
+		r.DELETE("/:courseId", c.deleteCourse)
+		// r.POST("/apply/:courseId", c.applyCourse)
 	}
 }
 
@@ -43,10 +47,49 @@ func (controller CourseController) createCourse(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request data"})
 		return
 	}
-	err := controller.service.CreateCourse(request)
+	result, err := controller.service.CreateCourse(request)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
 		return
 	}
-	ctx.JSON(http.StatusCreated, gin.H{"sucess": "created successfully"})
+	ctx.JSON(http.StatusCreated, result)
+}
+
+func (controller CourseController) updateCourse(ctx *gin.Context) {
+	courseId, ok := utils.ValidateParam(ctx, "courseId")
+	if !ok {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Validation Param Failed"})
+		return
+	}
+
+	rq := request.UpdateCourse{}
+	if err := ctx.ShouldBindJSON(&rq); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "body request not valid"})
+		return
+	}
+
+	rq.Id = courseId
+	result, err := controller.service.UpdateCourse(rq)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "something went wrong"})
+		return
+	}
+	ctx.JSON(http.StatusNoContent, result)
+}
+
+func (controller CourseController) deleteCourse(ctx *gin.Context) {
+	id, ok := utils.ValidateParam(ctx, "courseId")
+
+	if !ok {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Validate Param Failed"})
+		return
+	}
+
+	result, err := controller.service.DeleteCourse(id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "something went wrong"})
+		return
+	}
+	ctx.JSON(http.StatusNoContent, result)
+
 }
