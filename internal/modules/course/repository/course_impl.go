@@ -326,16 +326,21 @@ func (r CourseRepositoryImplementation) GetApplicationDetail(ApplicationId int) 
 }
 
 func (r CourseRepositoryImplementation) GetApplicationPdf(ApplicationId int) (*response.ApplicationTrancript, error) {
-	// 	query := `SELECT
-	// 				ta.transcript_ID,
-	// 				fs.file_name,
-	// 				fs.file_bytes
-	// 			FROM ta_application as ta
-	// 			LEFT JOIN file_storage as fs
-	// 			ON ta.transcript_ID = fs.transcript_ID
-	// 			WHERE ta.id = $1`
+	query := `SELECT
+				fs.file_name,
+				fs.file_bytes
+			FROM ta_application as ta
+			LEFT JOIN file_storage as fs
+			ON ta.transcript_ID = fs.transcript_ID
+			WHERE ta.id = $1`
 
-	// 	var
-	// 	err := r.db.QueryRow(query,ApplicationId).Scan()
-	return nil, nil
+	var application response.ApplicationTrancript
+	err := r.db.QueryRow(query, ApplicationId).Scan(
+		&application.FileName,
+		&application.Transcript,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &application, nil
 }
