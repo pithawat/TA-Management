@@ -256,3 +256,59 @@ func TestService_DeleteCourse_Integration(t *testing.T) {
 		t.Errorf("already Deleted but still appear! ")
 	}
 }
+
+func TestService_ApplyCourse_Integration(t *testing.T) {
+	if testDB == nil {
+		t.Fatal("Test database connection (testDB) is not initialized. Check your TestMain execution.")
+	}
+
+	// 1. Setup the real service and clean the database
+	svc := setupServiceTest(t, testDB)
+	cleanDB(t, testDB, "courses")
+
+	baseBody := request.CreateCourse{
+		CourseName:      "Advanced Go Programming",
+		CourseID:        "01076203",
+		ProfessorID:     1,
+		CourseProgramID: 1,
+		CourseProgram:   "General",
+		Sec:             "101",
+		SemesterID:      1,
+		Semester:        "2/2568",
+		ClassdayID:      1,
+		Classday:        "Monday",
+		// Note: Using fixed dates or a single time.Time instance is better for testing
+		ClassStart:  time.Date(2026, time.January, 1, 9, 0, 0, 0, time.UTC),
+		ClassEnd:    time.Date(2026, time.January, 1, 12, 0, 0, 0, time.UTC),
+		CreatedDate: time.Now(),
+	}
+
+	_, err := svc.CreateCourse(baseBody)
+	if err != nil {
+		t.Fatalf("Failed to create initial course: %v", err)
+	}
+
+	filePath := "../../../../test_assets/sample.pdf"
+	fileBytes, err := os.ReadFile(filePath)
+	if err != nil {
+		t.Fatalf("Failed to readfile : %v", err)
+	}
+	courseId := 1
+	filename := "sample.pdf"
+	applyBody := request.ApplyCourse{
+		StudentID: 12345,
+		StatusID:  3,
+		CourseID:  &courseId,
+		FileBytes: &fileBytes,
+		FileName:  &filename,
+	}
+
+	result, err := svc.ApplyCourse(applyBody)
+	if err != nil {
+		t.Errorf("ApplyCourse failed: %v", err)
+	}
+
+	if result == nil {
+		t.Error("Expected result to be non-nil")
+	}
+}

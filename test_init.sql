@@ -1,46 +1,3 @@
-CREATE TABLE professors(
-    id SERIAL PRIMARY KEY,
-    firstname VARCHAR(100) NOT NULL,
-    lastname VARCHAR(150) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE accountants(
-    id SERIAL PRIMARY KEY,
-    firstname VARCHAR(100) NOT NULL,
-    lastname VARCHAR(150) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
---verified
-CREATE TABLE courses(
-    id SERIAL PRIMARY KEY,
-    course_ID VARCHAR(20) NOT NULL,
-    course_name VARCHAR(150) NOT NULL,
-    professor_ID INTEGER NOT NULL,
-    course_program_ID INTEGER NOT NULL,
-    course_program VARCHAR(30) NOT NULL,
-    sec VARCHAR(20) NOT NULL,
-    semester_ID INTEGER NOT NULL,
-    semester VARCHAR(10) NOT NULL,
-    class_day_ID INTEGER NOT NULL,
-    class_day VARCHAR(10) NOT NULL,
-    class_start TIME NOT NULL,
-    class_end TIME NOT NULL,
-    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    deleted_date TIMESTAMP
-);
-
---verified
-CREATE TABLE ta_job_posting(
-    id SERIAL PRIMARY KEY,
-    professor_ID INTEGER NOT NULL,
-    task VARCHAR(200) NOT NULL,
-    status_ID INTEGER NOT NULL,
-    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    delete_date TIMESTAMP
-);
-
 --lookup table
 
 --verified
@@ -68,6 +25,109 @@ CREATE TABLE semester(
     end_date DATE
 );
 
+CREATE TABLE professors(
+    professor_ID SERIAL PRIMARY KEY,
+    firstname VARCHAR(100) NOT NULL,
+    lastname VARCHAR(150) NOT NULL,
+    created_at TIMESTAMP 
+);
+
+CREATE TABLE accountants(
+    id SERIAL PRIMARY KEY,
+    firstname VARCHAR(100) NOT NULL,
+    lastname VARCHAR(150) NOT NULL,
+    created_at TIMESTAMP 
+);
+
+CREATE TABLE students(
+    student_ID INTEGER PRIMARY KEY,
+    firstname VARCHAR(100),
+    lastname VARCHAR(100) 
+);
+
+--verified
+CREATE TABLE transcript_storage(
+    transcript_ID SERIAL PRIMARY KEY,
+    file_bytes BYTEA,
+    file_name VARCHAR(30)
+);
+
+--verified
+CREATE TABLE courses(
+    id SERIAL PRIMARY KEY,
+    course_ID VARCHAR(20) NOT NULL,
+    course_name VARCHAR(150) NOT NULL,
+    professor_ID INTEGER NOT NULL,
+    course_program_ID INTEGER NOT NULL,
+    course_program VARCHAR(30) NOT NULL,
+    sec VARCHAR(20) NOT NULL,
+    semester_ID INTEGER NOT NULL,
+    semester VARCHAR(10) NOT NULL,
+    class_day_ID INTEGER NOT NULL,
+    class_day VARCHAR(10) NOT NULL,
+    class_start TIME NOT NULL,
+    class_end TIME NOT NULL,
+    created_date TIMESTAMP ,
+    deleted_date TIMESTAMP,
+    CONSTRAINT FK_professor_ID
+        FOREIGN KEY (professor_ID)
+        REFERENCES professors(professor_ID),
+    CONSTRAINT FK_course_program_ID
+        FOREIGN KEY (course_program_ID)
+        REFERENCES course_programs(course_program_ID),    
+    CONSTRAINT FK_semester_ID
+        FOREIGN KEY (semester_ID)
+        REFERENCES semester(semester_ID),
+    CONSTRAINT FK_class_day_ID
+        FOREIGN KEY (class_day_ID)
+        REFERENCES class_days(class_day_ID)
+);
+
+--verified
+CREATE TABLE ta_job_posting(
+    id SERIAL PRIMARY KEY,
+    professor_ID INTEGER NOT NULL,
+    task VARCHAR(200) NOT NULL,
+    status_ID INTEGER NOT NULL,
+    course_ID INTEGER ,
+    created_date TIMESTAMP ,
+    delete_date TIMESTAMP,
+    CONSTRAINT FK_status_ID
+        FOREIGN KEY (status_ID)
+        REFERENCES status(status_ID),
+    CONSTRAINT FK_professor_ID
+        FOREIGN KEY (professor_ID)
+        REFERENCES professors(professor_ID),
+    CONSTRAINT FK_course_ID
+        FOREIGN KEY (course_ID)
+        REFERENCES courses(id)
+);
+
+CREATE TABLE ta_application(
+    id SERIAL PRIMARY KEY,
+    transcript_ID INT,
+    student_ID INT,
+    status_ID INT,
+    course_ID INT,
+    created_date TIMESTAMP,
+    deleted_date TIMESTAMP,
+    CONSTRAINT FK_student_ID
+        FOREIGN KEY (student_ID)
+        REFERENCES students(student_ID),
+    CONSTRAINT FK_status_ID
+        FOREIGN KEY (status_ID)
+        REFERENCES status(status_ID),
+    CONSTRAINT FK_course_ID
+        FOREIGN KEY (course_ID)
+        REFERENCES courses(id),
+    CONSTRAINT FK_transcript_ID
+        FOREIGN KEY (transcript_ID)
+        REFERENCES transcript_storage(transcript_ID)
+);
+
+
+
+
 -- insert constant values
 
 INSERT INTO professors (firstname, lastname) VALUES
@@ -93,8 +153,7 @@ INSERT INTO professors (firstname, lastname) VALUES
 ('Parinya', 'Ekparinya'),
 ('Kanut', 'Tangtisanon'),
 ('Watjanapong', 'Kasemsiri'),
-('Jirasak', 'Sittigorn'),
-('Pithawat', 'Kitmongkolchai');
+('Jirasak', 'Sittigorn');
 
 -- semester date
 WITH all_start_dates AS (
@@ -178,3 +237,6 @@ INSERT INTO class_days (class_day_value) VALUES
 INSERT INTO course_programs (course_program_value) VALUES
     ('General'),
     ('International');
+
+INSERT INTO students (student_ID,firstname,lastname) VALUES
+    (12345,'guest','test')

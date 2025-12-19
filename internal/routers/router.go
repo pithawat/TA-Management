@@ -28,8 +28,32 @@ var (
 )
 var googleOAuthConfig *oauth2.Config
 
+func corsMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		origin := c.Request.Header.Get("Origin")
+		// Allow all origins
+		c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+		// Allow specific methods
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
+		// Allow specific headers
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Bucket-Name, Folder-Path")
+		// Allow credentials
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+
+		// Handle preflight requests
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
+	}
+}
+
 func InitRouter() *gin.Engine {
 	r := gin.Default()
+
+	r.Use(corsMiddleware())
 
 	db := config.ConnectDatabase()
 

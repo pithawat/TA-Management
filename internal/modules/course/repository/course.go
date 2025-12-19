@@ -10,4 +10,9 @@ type CourseRepository interface {
 	CreateCourse(body request.CreateCourse) (int, error)
 	UpdateCourse(body request.UpdateCourse) error
 	DeleteCourse(id int) error
+	ApplyCourse(body request.ApplyCourse) (int, error)
+	GetApplicationByStudentId(studentId int) ([]response.Application, error)
+	GetApplicationByCourseId(courseId int) ([]response.Application, error)
+	GetApplicationDetail(ApplicationId int) (*response.Application, error)
+	GetApplicationPdf(ApplicationId int) (*response.ApplicationTrancript, error)
 }

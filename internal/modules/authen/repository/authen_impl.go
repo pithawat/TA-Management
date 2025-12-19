@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"TA-management/internal/modules/authen/dto/request"
 	"database/sql"
 	"fmt"
 	"strings"
@@ -21,7 +22,6 @@ func (r AuthenRepositoryImplementation) CheckUserRole(name string) (string, erro
 	}
 	firstname := parts[0]
 	lastname := parts[1]
-	fmt.Print(firstname, lastname)
 
 	var isProf bool
 	query := "SELECT EXISTS(SELECT 1 FROM professors WHERE firstname = $1 AND lastname = $2)"
@@ -44,4 +44,32 @@ func (r AuthenRepositoryImplementation) CheckUserRole(name string) (string, erro
 	}
 
 	return "student", nil
+}
+
+func (r AuthenRepositoryImplementation) AddStudent(rq request.CreateStudent) error {
+
+	var count int
+	checkQuery := `SELECT count(*) FROM students WHERE student_ID = $1`
+
+	err := r.db.QueryRow(checkQuery, rq.StudentID).Scan(&count)
+	if err != nil {
+		return err
+	}
+
+	if count >= 1 {
+		fmt.Println("this user already signup")
+		return nil
+	}
+
+	query := `INSERT INTO students(student_ID, firstname, lastname) VALUES($1, $2, $3)`
+	_, err = r.db.Exec(query,
+		rq.StudentID,
+		rq.Firstname,
+		rq.Lastname)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

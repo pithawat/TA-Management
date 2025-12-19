@@ -177,3 +177,165 @@ func (r CourseRepositoryImplementation) DeleteCourse(id int) error {
 	}
 	return nil
 }
+
+func (r CourseRepositoryImplementation) ApplyCourse(body request.ApplyCourse) (int, error) {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return 0, err
+	}
+
+	var fileId int
+	query := "INSERT INTO transcript_storage(file_bytes,file_name) VALUES($1, $2) RETURNING transcript_ID"
+	err = tx.QueryRow(query, body.FileBytes, body.FileName).Scan(&fileId)
+	if err != nil {
+		tx.Rollback()
+		return 0, fmt.Errorf("failed on insert to transcript file : %v", err)
+	}
+	fmt.Println(body.StudentID)
+	fmt.Println(body.StatusID)
+	var applicationId int
+	query = `INSERT INTO ta_application(transcript_ID, student_ID, 
+			status_ID, course_ID, created_date)
+			VALUES($1, $2, $3, $4, $5)
+			RETURNING id`
+
+	err = tx.QueryRow(query,
+		fileId,
+		body.StudentID,
+		body.StatusID,
+		body.CourseID,
+		time.Now(),
+	).Scan(&applicationId)
+
+	if err != nil {
+		tx.Rollback()
+		return 0, fmt.Errorf("failed on insert to ta_application: %v", err)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		return 0, fmt.Errorf("failed on commit transaction")
+	}
+
+	return applicationId, nil
+
+}
+
+func (r CourseRepositoryImplementation) GetApplicationByStudentId(studentId int) ([]response.Application, error) {
+	query := `SELECT 
+					ta.student_ID, 
+					ta.status_ID, 
+					ta.course_ID, 
+					ta.created_date,
+					st.status_value
+				FROM ta_application AS ta 
+				LEFT JOIN status AS st
+					ON ta.status_ID = st.status_ID
+				WHERE student_ID = $1`
+
+	rows, err := r.db.Query(query, studentId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var applications []response.Application
+	for rows.Next() {
+		var application response.Application
+
+		err := rows.Scan(
+			&application.StudentID,
+			&application.StatusID,
+			&application.CourseID,
+			&application.CreatedDate,
+			&application.StatusCode,
+		)
+		if err != nil {
+			return nil, err
+		}
+		applications = append(applications, application)
+	}
+
+	return applications, nil
+}
+
+func (r CourseRepositoryImplementation) GetApplicationByCourseId(courseId int) ([]response.Application, error) {
+	query := `SELECT 
+					ta.student_ID, 
+					ta.status_ID, 
+					ta.course_ID, 
+					ta.created_date,
+					st.status_value
+				FROM ta_application AS ta 
+				LEFT JOIN status AS st
+					ON ta.status_ID = st.status_ID
+				WHERE course_ID = $1`
+
+	rows, err := r.db.Query(query, courseId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var applications []response.Application
+	for rows.Next() {
+		var application response.Application
+
+		err := rows.Scan(
+			&application.StudentID,
+			&application.StatusID,
+			&application.CourseID,
+			&application.CreatedDate,
+			&application.StatusCode,
+		)
+		if err != nil {
+			return nil, err
+		}
+		applications = append(applications, application)
+	}
+
+	return applications, nil
+}
+
+func (r CourseRepositoryImplementation) GetApplicationDetail(ApplicationId int) (*response.Application, error) {
+	query := `SELECT 
+					ta.student_ID, 
+					ta.status_ID, 
+					ta.course_ID, 
+					ta.created_date,
+					st.status_value
+				FROM ta_application AS ta 
+				LEFT JOIN status AS st
+					ON ta.status_ID = st.status_ID
+				WHERE id = $1`
+
+	var application response.Application
+	err := r.db.QueryRow(query, ApplicationId).Scan(
+		&application.StudentID,
+		&application.StatusID,
+		&application.CourseID,
+		&application.CreatedDate,
+		&application.StatusCode,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &application, nil
+}
+
+func (r CourseRepositoryImplementation) GetApplicationPdf(ApplicationId int) (*response.ApplicationTrancript, error) {
+	// 	query := `SELECT
+	// 				ta.transcript_ID,
+	// 				fs.file_name,
+	// 				fs.file_bytes
+	// 			FROM ta_application as ta
+	// 			LEFT JOIN file_storage as fs
+	// 			ON ta.transcript_ID = fs.transcript_ID
+	// 			WHERE ta.id = $1`
+
+	// 	var
+	// 	err := r.db.QueryRow(query,ApplicationId).Scan()
+	return nil, nil
+}

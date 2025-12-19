@@ -36,4 +36,9 @@ type UpdateCourse struct {
 }
 
 type ApplyCourse struct {
+	StudentID int `form:"studentID"`
+	StatusID  int `form:"statusID"`
+	CourseID  *int
+	FileBytes *[]byte
+	FileName  *string
 }

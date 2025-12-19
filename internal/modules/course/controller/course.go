@@ -4,6 +4,8 @@ import (
 	"TA-management/internal/modules/course/dto/request"
 	"TA-management/internal/modules/course/service"
 	"TA-management/internal/utils"
+	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -27,7 +29,11 @@ func InitializeController(courseService service.CourseService, r *gin.RouterGrou
 		r.POST("", c.createCourse)
 		r.PATCH("/:courseId", c.updateCourse)
 		r.DELETE("/:courseId", c.deleteCourse)
-		// r.POST("/apply/:courseId", c.applyCourse)
+		r.POST("/apply/:courseId", c.applyCourse)
+		r.GET("/application/student/:studentId", c.getApplicationByStudentId)
+		r.GET("/application/course/:courseId", c.getApplicationBycourseId)
+		r.GET("/application/:applilcationId", c.getApplicationDetail)
+		r.GET("/applicatin/pdf/:applicationId", c.getApplicationPdf)
 	}
 }
 
@@ -58,20 +64,20 @@ func (controller CourseController) createCourse(ctx *gin.Context) {
 func (controller CourseController) updateCourse(ctx *gin.Context) {
 	courseId, ok := utils.ValidateParam(ctx, "courseId")
 	if !ok {
-		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Validation Param Failed"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Validation Param Failed"})
 		return
 	}
 
 	rq := request.UpdateCourse{}
 	if err := ctx.ShouldBindJSON(&rq); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"message": "body request not valid"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "body request not valid"})
 		return
 	}
 
 	rq.Id = courseId
 	result, err := controller.service.UpdateCourse(rq)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "something went wrong"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "something went wrong"})
 		return
 	}
 	ctx.JSON(http.StatusNoContent, result)
@@ -81,15 +87,134 @@ func (controller CourseController) deleteCourse(ctx *gin.Context) {
 	id, ok := utils.ValidateParam(ctx, "courseId")
 
 	if !ok {
-		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Validate Param Failed"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Validate Param Failed"})
 		return
 	}
 
 	result, err := controller.service.DeleteCourse(id)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "something went wrong"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "something went wrong"})
 		return
 	}
 	ctx.JSON(http.StatusNoContent, result)
 
+}
+
+func (controller CourseController) applyCourse(ctx *gin.Context) {
+	rq := request.ApplyCourse{}
+	id, ok := utils.ValidateParam(ctx, "courseId")
+	if !ok {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Validate Param Failed."})
+		return
+	}
+
+	fileHeader, err := ctx.FormFile("pdfFile")
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "File is required."})
+		return
+	}
+
+	file, err := fileHeader.Open()
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Failed to open file."})
+		return
+	}
+	defer file.Close()
+
+	fileBytes, err := io.ReadAll(file)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read file."})
+		return
+	}
+
+	if err := ctx.ShouldBind(&rq); err != nil {
+		fmt.Println(err)
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "body request not valid"})
+		return
+	}
+
+	rq.CourseID = &id
+	rq.FileBytes = &fileBytes
+	rq.FileName = &fileHeader.Filename
+
+	result, err := controller.service.ApplyCourse(rq)
+	if err != nil {
+		fmt.Println(err)
+		ctx.JSON(http.StatusInternalServerError, result)
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, result)
+
+}
+
+func (controller CourseController) getApplicationByStudentId(ctx *gin.Context) {
+	id, ok := utils.ValidateParam(ctx, "studentId")
+	if !ok {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Validate Param Failed."})
+		return
+	}
+
+	result, err := controller.service.GetApplicationByStudentId(id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, result)
+		return
+	}
+	ctx.JSON(http.StatusOK, result)
+}
+
+func (controller CourseController) getApplicationBycourseId(ctx *gin.Context) {
+	id, ok := utils.ValidateParam(ctx, "studentId")
+	if !ok {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Validate Param Failed."})
+		return
+	}
+
+	result, err := controller.service.GetApplicationByCourseId(id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, result)
+		return
+	}
+	ctx.JSON(http.StatusOK, result)
+}
+
+func (controller CourseController) getApplicationDetail(ctx *gin.Context) {
+	id, ok := utils.ValidateParam(ctx, "applicationId")
+	if !ok {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Validate Param Failed."})
+		return
+	}
+
+	result, err := controller.service.GetApplicationDetail(id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, result)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, result)
+
+}
+
+func (controller CourseController) getApplicationPdf(ctx *gin.Context) {
+	id, ok := utils.ValidateParam(ctx, "applicationId")
+	if !ok {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Validate Param Failed."})
+		return
+	}
+
+	result, err := controller.service.GetApplicationPdf(id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, result)
+		return
+	}
+
+	if result != nil {
+		fileName := "transcript_" + result.FileName + "pdf."
+		ctx.Header("Content-Disposition", "attachment; filename="+fileName)
+		ctx.Header("Content-Type", "application/pdf")
+
+		ctx.Data(http.StatusOK, "application/pdf", result.Transcript)
+	} else {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "NO Transcript data found"})
+	}
 }

@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
+	"unicode"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -88,4 +90,20 @@ func ValidateParam(ctx *gin.Context, paramName string) (int, bool) {
 	}
 
 	return id, true
+}
+
+func ExtractDigits(s string) (int, bool) {
+	var sb strings.Builder
+	for _, r := range s {
+		if unicode.IsDigit(r) {
+			sb.WriteRune(r)
+		}
+	}
+
+	number, err := strconv.Atoi(sb.String())
+	if err != nil {
+		fmt.Printf("Failed to Extractdigits : %v\n", err)
+		return 0, false
+	}
+	return number, true
 }

@@ -1,9 +1,12 @@
 package service
 
 import (
-	authresponse "TA-management/internal/modules/authen/dto"
+	"TA-management/internal/modules/authen/dto/request"
+	authresponse "TA-management/internal/modules/authen/dto/response"
 	"TA-management/internal/modules/authen/repository"
 	"TA-management/internal/modules/shared/dto/response"
+	"TA-management/internal/utils"
+	"strings"
 
 	"encoding/json"
 	"errors"
@@ -69,8 +72,38 @@ func (s AuthenServiceImplementation) HandleGoogleCallback(ctx *gin.Context, code
 
 	role, err := s.repo.CheckUserRole(gu.Name)
 	if err != nil {
-		fmt.Print(err)
+		fmt.Println(err)
 		return "", nil, errors.New("failed to check user role")
+	}
+
+	//addnew student data
+	if role == "student" {
+
+		studentID, ok := utils.ExtractDigits(gu.Email)
+		if !ok {
+			return "", nil, errors.New("failed to extract digit")
+		}
+
+		name := strings.Fields(gu.Name)
+		if len(name) == 0 {
+			return "", nil, errors.New("google user have no name")
+		}
+
+		rq := request.CreateStudent{
+			StudentID: studentID,
+			Firstname: name[0],
+		}
+
+		if len(name) > 1 {
+			rq.Lastname = name[1]
+		}
+
+		err := s.repo.AddStudent(rq)
+		if err != nil {
+			fmt.Println(err)
+			return "", nil, errors.New("failed to add student")
+		}
+
 	}
 
 	now := time.Now()
@@ -91,7 +124,7 @@ func (s AuthenServiceImplementation) HandleGoogleCallback(ctx *gin.Context, code
 	j := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signed, err := j.SignedString(s.jwtSecret)
 	if err != nil {
-		fmt.Print(err)
+		fmt.Println(err)
 		return "", nil, errors.New("failed to sign jwt")
 	}
 
