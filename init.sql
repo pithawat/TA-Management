@@ -94,8 +94,10 @@ CREATE TABLE ta_job_posting(
     id SERIAL PRIMARY KEY,
     professor_ID INTEGER NOT NULL,
     task VARCHAR(200) NOT NULL,
+    ta_allocation INTEGER NOT NULL,
     status_ID INTEGER NOT NULL,
     course_ID INTEGER ,
+    grade_ID INTEGER NOT NULL,
     created_date TIMESTAMP ,
     delete_date TIMESTAMP,
     CONSTRAINT FK_status_ID
@@ -106,7 +108,10 @@ CREATE TABLE ta_job_posting(
         REFERENCES professors(professor_ID),
     CONSTRAINT FK_course_ID
         FOREIGN KEY (course_ID)
-        REFERENCES courses(id)
+        REFERENCES courses(id),
+    CONSTRAINT FK_grade_ID
+        FOREIGN KEY (grade_ID)
+        REFERENCES grades(grade_ID)
 );
 
 CREATE TABLE ta_application(

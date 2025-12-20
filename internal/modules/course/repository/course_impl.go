@@ -64,6 +64,11 @@ func (r CourseRepositoryImplementation) CreateCourse(body request.CreateCourse) 
 		return 0, errors.New("course already exists")
 	}
 
+	tx, err := r.db.Begin()
+	if err != nil {
+		return 0, err
+	}
+
 	query := `INSERT INTO courses(course_ID, course_name,
 	professor_ID, course_program_ID, course_program, sec, 
 	semester_ID, semester, class_day_ID, class_day, 
@@ -73,7 +78,7 @@ func (r CourseRepositoryImplementation) CreateCourse(body request.CreateCourse) 
 
 	var lastInsertId int
 
-	err = r.db.QueryRow(query,
+	err = tx.QueryRow(query,
 		body.CourseID,
 		body.CourseName,
 		body.ProfessorID,
@@ -89,6 +94,38 @@ func (r CourseRepositoryImplementation) CreateCourse(body request.CreateCourse) 
 	).Scan(&lastInsertId)
 
 	if err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+
+	//Insert ta_jobposting
+	query = `INSERT INTO ta_job_posting(
+	professor_ID, 
+	course_ID,
+	grade_ID,
+	task,
+	ta_allocation,
+	status_ID,
+	created_date)
+	values ($1,$2,$3, $4, $5 ,$6 ,$7 )
+	RETURNING id`
+
+	_, err = tx.Exec(query,
+		body.ProfessorID,
+		lastInsertId,
+		body.GradeID,
+		body.Task,
+		body.TaAllocation,
+		3,
+		time.Now(),
+	)
+	if err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		tx.Rollback()
 		return 0, err
 	}
 
