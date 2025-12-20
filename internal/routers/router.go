@@ -6,6 +6,9 @@ import (
 	coursecontroller "TA-management/internal/modules/course/controller"
 	courserepo "TA-management/internal/modules/course/repository"
 	courseservice "TA-management/internal/modules/course/service"
+	lookupcontroller "TA-management/internal/modules/lookup/controller"
+	lookuprepo "TA-management/internal/modules/lookup/repository"
+	lookupservice "TA-management/internal/modules/lookup/service"
 	"TA-management/internal/utils"
 	"os"
 
@@ -84,6 +87,9 @@ func InitRouter() *gin.Engine {
 	authRepo := authenrepo.NewAuthenRepository(db)
 	authService := authenservice.NewAuthenService(authRepo, googleOAuthConfig, jwtSecret)
 
+	lookupRepo := lookuprepo.NewLookupRepository(db)
+	lookupService := lookupservice.NewLookupService(lookupRepo)
+
 	baseRouter := r.Group("/TA-management")
 
 	authRouter := baseRouter.Group("/auth")
@@ -97,6 +103,9 @@ func InitRouter() *gin.Engine {
 	{
 		courseRouter := authenticatedRouter.Group("/course")
 		coursecontroller.InitializeController(courseService, courseRouter)
+
+		lookupRouter := authenticatedRouter.Group("/lookup")
+		lookupcontroller.InitializeController(lookupService, lookupRouter)
 	}
 
 	return r
