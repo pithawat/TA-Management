@@ -26,6 +26,7 @@ func InitializeController(courseService service.CourseService, r *gin.RouterGrou
 	r.Use()
 	{
 		r.GET("", c.findAllCourse)
+		r.GET("/:professorId", c.findProfessorCourse)
 		r.POST("", c.createCourse)
 		r.PATCH("/:courseId", c.updateCourse)
 		r.DELETE("/:courseId", c.deleteCourse)
@@ -41,6 +42,23 @@ func InitializeController(courseService service.CourseService, r *gin.RouterGrou
 func (controller CourseController) findAllCourse(ctx *gin.Context) {
 	//validate
 	result, err := controller.service.GetAllCourse()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, result)
+}
+
+func (controller CourseController) findProfessorCourse(ctx *gin.Context) {
+
+	//validate
+	professorId, ok := utils.ValidateParam(ctx, "professorId")
+	if !ok {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Validation Param Failed"})
+		return
+	}
+
+	result, err := controller.service.GetProfessorCourse(professorId)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
 		return

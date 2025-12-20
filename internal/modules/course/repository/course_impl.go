@@ -47,6 +47,36 @@ func (r CourseRepositoryImplementation) GetAllCourse() ([]response.Course, error
 	return courses, nil
 }
 
+func (r CourseRepositoryImplementation) GetProfessorCourse(professorId int) ([]response.Course, error) {
+
+	query := `SELECT course_ID, 
+				course_name, 
+				ta_allocation, 
+				work_hour 
+			FROM courses
+				WHERE professor_ID=$1`
+
+	rows, err := r.db.Query(query, professorId)
+	if err != nil {
+		return nil, err
+	}
+	//garantees that connection is released back to the pool ,prevent leak
+	defer rows.Close()
+
+	var courses []response.Course
+	for rows.Next() {
+		var course response.Course
+
+		err := rows.Scan(&course.CourseID, &course.CourseName, &course.TaAllocation, &course.WorkHour)
+		if err != nil {
+			return nil, err
+		}
+		courses = append(courses, course)
+	}
+
+	return courses, nil
+}
+
 func (r CourseRepositoryImplementation) CreateCourse(body request.CreateCourse) (int, error) {
 
 	queryCheck := `SELECT COUNT(*) FROM courses 

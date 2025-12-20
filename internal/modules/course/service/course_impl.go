@@ -127,3 +127,16 @@ func (s CourseServiceImplementation) ApproveApplication(applicationId int) (*res
 		Message: "Approved application Successful",
 	}, nil
 }
+
+func (s CourseServiceImplementation) GetProfessorCourse(professorId int) (*response.RequestDataResponse, error) {
+	courses, err := s.repo.GetProfessorCourse(professorId)
+	if err != nil {
+		return nil, err
+	}
+	response := response.RequestDataResponse{
+		Data:    courses,
+		Message: "Success",
+	}
+
+	return &response, nil
+}
