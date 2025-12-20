@@ -51,6 +51,7 @@ func (controller CourseController) findAllCourse(ctx *gin.Context) {
 func (controller CourseController) createCourse(ctx *gin.Context) {
 	var request request.CreateCourse
 	if err := ctx.ShouldBindJSON(&request); err != nil {
+		fmt.Println(err)
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request data"})
 		return
 	}

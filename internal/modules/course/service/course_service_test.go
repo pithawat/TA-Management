@@ -85,8 +85,8 @@ func TestService_CreateCourse_Integration(t *testing.T) {
 		ClassdayID:      1,
 		Classday:        "Monday",
 		// Note: Using fixed dates or a single time.Time instance is better for testing
-		ClassStart:  time.Date(2026, time.January, 1, 9, 0, 0, 0, time.UTC),
-		ClassEnd:    time.Date(2026, time.January, 1, 12, 0, 0, 0, time.UTC),
+		ClassStart:  " time.Date(2026, time.January, 1, 9, 0, 0, 0, time.UTC)",
+		ClassEnd:    "time.Date(2026, time.January, 1, 12, 0, 0, 0, time.UTC)",
 		CreatedDate: time.Now(),
 	}
 
@@ -170,8 +170,8 @@ func TestService_UpdateCourse_Integration(t *testing.T) {
 		ClassdayID:      1,
 		Classday:        "Monday",
 		// Note: Using fixed dates or a single time.Time instance is better for testing
-		ClassStart:  time.Date(2026, time.January, 1, 9, 0, 0, 0, time.UTC),
-		ClassEnd:    time.Date(2026, time.January, 1, 12, 0, 0, 0, time.UTC),
+		ClassStart:  " time.Date(2026, time.January, 1, 9, 0, 0, 0, time.UTC)",
+		ClassEnd:    "time.Date(2026, time.January, 1, 12, 0, 0, 0, time.UTC)",
 		CreatedDate: time.Now(),
 	}
 
@@ -232,8 +232,8 @@ func TestService_DeleteCourse_Integration(t *testing.T) {
 		ClassdayID:      1,
 		Classday:        "Monday",
 		// Note: Using fixed dates or a single time.Time instance is better for testing
-		ClassStart:  time.Date(2026, time.January, 1, 9, 0, 0, 0, time.UTC),
-		ClassEnd:    time.Date(2026, time.January, 1, 12, 0, 0, 0, time.UTC),
+		ClassStart:  " time.Date(2026, time.January, 1, 9, 0, 0, 0, time.UTC)",
+		ClassEnd:    "time.Date(2026, time.January, 1, 12, 0, 0, 0, time.UTC)",
 		CreatedDate: time.Now(),
 	}
 
@@ -279,8 +279,8 @@ func TestService_ApplyCourse_Integration(t *testing.T) {
 		ClassdayID:      1,
 		Classday:        "Monday",
 		// Note: Using fixed dates or a single time.Time instance is better for testing
-		ClassStart:  time.Date(2026, time.January, 1, 9, 0, 0, 0, time.UTC),
-		ClassEnd:    time.Date(2026, time.January, 1, 12, 0, 0, 0, time.UTC),
+		ClassStart:  " time.Date(2026, time.January, 1, 9, 0, 0, 0, time.UTC)",
+		ClassEnd:    "time.Date(2026, time.January, 1, 12, 0, 0, 0, time.UTC)",
 		CreatedDate: time.Now(),
 	}
 
@@ -335,8 +335,8 @@ func TestService_GetApplicationByStudentId_Integration(t *testing.T) {
 		ClassdayID:      1,
 		Classday:        "Monday",
 		// Note: Using fixed dates or a single time.Time instance is better for testing
-		ClassStart:  time.Date(2026, time.January, 1, 9, 0, 0, 0, time.UTC),
-		ClassEnd:    time.Date(2026, time.January, 1, 12, 0, 0, 0, time.UTC),
+		ClassStart:  " time.Date(2026, time.January, 1, 9, 0, 0, 0, time.UTC)",
+		ClassEnd:    "time.Date(2026, time.January, 1, 12, 0, 0, 0, time.UTC)",
 		CreatedDate: time.Now(),
 	}
 
@@ -401,8 +401,8 @@ func TestService_GetApplicationByCourseId_Integration(t *testing.T) {
 		ClassdayID:      1,
 		Classday:        "Monday",
 		// Note: Using fixed dates or a single time.Time instance is better for testing
-		ClassStart:  time.Date(2026, time.January, 1, 9, 0, 0, 0, time.UTC),
-		ClassEnd:    time.Date(2026, time.January, 1, 12, 0, 0, 0, time.UTC),
+		ClassStart:  " time.Date(2026, time.January, 1, 9, 0, 0, 0, time.UTC)",
+		ClassEnd:    "time.Date(2026, time.January, 1, 12, 0, 0, 0, time.UTC)",
 		CreatedDate: time.Now(),
 	}
 
@@ -466,8 +466,8 @@ func TestService_GetApplicationDetail_Integration(t *testing.T) {
 		ClassdayID:      1,
 		Classday:        "Monday",
 		// Note: Using fixed dates or a single time.Time instance is better for testing
-		ClassStart:  time.Date(2026, time.January, 1, 9, 0, 0, 0, time.UTC),
-		ClassEnd:    time.Date(2026, time.January, 1, 12, 0, 0, 0, time.UTC),
+		ClassStart:  " time.Date(2026, time.January, 1, 9, 0, 0, 0, time.UTC)",
+		ClassEnd:    "time.Date(2026, time.January, 1, 12, 0, 0, 0, time.UTC)",
 		CreatedDate: time.Now(),
 	}
 

@@ -110,6 +110,7 @@ func (s AuthenServiceImplementation) HandleGoogleCallback(ctx *gin.Context, code
 		// Look up the ID from the database based on the name
 		dbID, err := s.repo.GetUserIDByName(gu.Name, role)
 		if err != nil {
+			fmt.Println(err)
 			return "", nil, errors.New("user not found in system records")
 		}
 		internalID = dbID

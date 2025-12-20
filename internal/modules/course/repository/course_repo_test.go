@@ -49,8 +49,8 @@ func TestRepo_CreateCourse_Success(t *testing.T) {
 		Semester:        "2/2568",
 		ClassdayID:      1,
 		Classday:        "Monday",
-		ClassStart:      time.Now(),
-		ClassEnd:        time.Now(),
+		ClassStart:      "13:00",
+		ClassEnd:        "17:00",
 		CreatedDate:     time.Now(),
 	}
 
@@ -84,8 +84,8 @@ func TestRepo_CreateCourse_FailsOnDuplicate(t *testing.T) {
 		Semester:        "2/2568",
 		ClassdayID:      1,
 		Classday:        "Monday",
-		ClassStart:      time.Now(),
-		ClassEnd:        time.Now(),
+		ClassStart:      "13:00",
+		ClassEnd:        "14:00",
 		CreatedDate:     time.Now(),
 	}
 	_, err := repo.CreateCourse(inputBody)

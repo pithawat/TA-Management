@@ -29,8 +29,8 @@ type CreateCourse struct {
 	Semester        string    `json:"semester"`
 	ClassdayID      int       `json:"classdayID"`
 	Classday        string    `json:"classday"`
-	ClassStart      time.Time `json:"classStart"`
-	ClassEnd        time.Time `json:"classEnd"`
+	ClassStart      string    `json:"classStart"`
+	ClassEnd        string    `json:"classEnd"`
 	TaAllocation    int       `json:"taAllocation"`
 	GradeID         int       `json:"gradeID"`
 	Task            string    `json:"task"`

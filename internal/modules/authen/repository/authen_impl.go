@@ -77,11 +77,14 @@ func (r AuthenRepositoryImplementation) AddStudent(rq request.CreateStudent) err
 func (r AuthenRepositoryImplementation) GetUserIDByName(name string, role string) (string, error) {
 
 	var table string
+	var columName string
 	switch strings.ToUpper(role) {
 	case "PROFESSOR":
 		table = "professors"
+		columName = "professor_ID"
 	case "FINANCE":
 		table = "accounts"
+		columName = "id"
 	default:
 		return "", fmt.Errorf("unsupported role for name lookup: %s", role)
 	}
@@ -94,7 +97,7 @@ func (r AuthenRepositoryImplementation) GetUserIDByName(name string, role string
 	lastname := parts[1]
 
 	var id string
-	query := fmt.Sprintf(`SELECT id FROM %s WHERE firstname = $1 AND lastname =$2`, table)
+	query := fmt.Sprintf(`SELECT %s FROM %s WHERE firstname = $1 AND lastname =$2`, columName, table)
 
 	err := r.db.QueryRow(query, firstname, lastname).Scan(&id)
 	if err != nil {
