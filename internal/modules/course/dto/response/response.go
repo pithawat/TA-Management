@@ -3,8 +3,10 @@ package response
 import "time"
 
 type Course struct {
-	CourseID   string `json:"courseID"`
-	CourseName string `json:"courseName"`
+	CourseID     string `json:"courseID"`
+	CourseName   string `json:"courseName"`
+	TaAllocation int    `json:"taAllocation"`
+	WorkHour     int    `json:"workHour"`
 }
 
 type Application struct {

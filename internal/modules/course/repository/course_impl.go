@@ -20,7 +20,12 @@ func NewCourseRepository(DB *sql.DB) CourseRepositoryImplementation {
 
 func (r CourseRepositoryImplementation) GetAllCourse() ([]response.Course, error) {
 
-	query := "SELECT course_ID, course_name FROM courses"
+	query := `SELECT course_ID, 
+				course_name, 
+				ta_allocation, 
+				work_hour 
+			FROM courses`
+
 	rows, err := r.db.Query(query)
 	if err != nil {
 		return nil, err
@@ -32,7 +37,7 @@ func (r CourseRepositoryImplementation) GetAllCourse() ([]response.Course, error
 	for rows.Next() {
 		var course response.Course
 
-		err := rows.Scan(&course.CourseID, &course.CourseName)
+		err := rows.Scan(&course.CourseID, &course.CourseName, &course.TaAllocation, &course.WorkHour)
 		if err != nil {
 			return nil, err
 		}
@@ -87,8 +92,10 @@ func (r CourseRepositoryImplementation) CreateCourse(body request.CreateCourse) 
 	class_day, 
 	class_start, 
 	class_end,
+	work_hour,
+	ta_allocation,
 	created_date) 
-	values ($1,$2,$3, $4, $5 ,$6 ,$7 ,$8 ,$9 ,$10 ,$11 ,$12, $13)
+	values ($1,$2,$3, $4, $5 ,$6 ,$7 ,$8 ,$9 ,$10 ,$11 ,$12, $13, $14, $15)
 	RETURNING id`
 
 	var lastInsertId int
@@ -106,6 +113,8 @@ func (r CourseRepositoryImplementation) CreateCourse(body request.CreateCourse) 
 		body.Classday,
 		body.ClassStart,
 		body.ClassEnd,
+		body.WorkHour,
+		body.TaAllocation,
 		time.Now(),
 	).Scan(&lastInsertId)
 

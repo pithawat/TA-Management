@@ -73,6 +73,8 @@ CREATE TABLE courses(
     class_day VARCHAR(10) NOT NULL,
     class_start TIME NOT NULL,
     class_end TIME NOT NULL,
+    work_hour INTEGER,
+    ta_allocation INTEGER,
     created_date TIMESTAMP ,
     deleted_date TIMESTAMP,
     CONSTRAINT FK_professor_ID
