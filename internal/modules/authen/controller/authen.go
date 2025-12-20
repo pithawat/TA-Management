@@ -29,7 +29,7 @@ func InitializeController(authenService service.AuthenService, googleOAuthConfig
 	{
 		r.GET("/google", c.handleLogin)
 		r.GET("google/callback", c.handleCallback)
-
+		r.GET("/me", c.handleAuthMe)
 	}
 }
 
@@ -51,7 +51,7 @@ func (controller AuthController) handleCallback(ctx *gin.Context) {
 		return
 	}
 
-	signedJWT, user, err := controller.service.HandleGoogleCallback(ctx, code)
+	signedJWT, _, err := controller.service.HandleGoogleCallback(ctx, code)
 
 	if err != nil {
 		// Map service errors to appropriate HTTP status codes
@@ -65,7 +65,8 @@ func (controller AuthController) handleCallback(ctx *gin.Context) {
 		return
 	}
 	ctx.SetCookie("auth_token", signedJWT, 3600*24*7, "/", "localhost", false, true) // Cookie lasts 7 days
-	ctx.JSON(http.StatusOK, user)
+	// ctx.JSON(http.StatusOK, user)
+	ctx.Redirect(http.StatusTemporaryRedirect, utils.GetenvDefault("FRONTEND_URL", "http://localhost:3000/login"))
 }
 
 func (controller AuthController) handleLogin(ctx *gin.Context) {
@@ -81,4 +82,14 @@ func (controller AuthController) handleLogin(ctx *gin.Context) {
 		oauth2.SetAuthURLParam("prompt", "consent"),
 	)
 	ctx.String(http.StatusOK, url)
+}
+
+func (controller AuthController) handleAuthMe(ctx *gin.Context) {
+	token, err := ctx.Cookie("auth_token")
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Not authenticated"})
+	}
+	user, err := utils.DecodeToken(token, []byte(utils.GetenvDefault("JWT_SECRET", "")))
+
+	ctx.JSON(http.StatusOK, user)
 }

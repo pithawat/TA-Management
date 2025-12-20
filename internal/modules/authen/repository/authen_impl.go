@@ -30,7 +30,7 @@ func (r AuthenRepositoryImplementation) CheckUserRole(name string) (string, erro
 		return "", err
 	}
 	if isProf {
-		return "professor", nil
+		return "PROFESSOR", nil
 	}
 
 	var isAccount bool
@@ -40,10 +40,10 @@ func (r AuthenRepositoryImplementation) CheckUserRole(name string) (string, erro
 		return "", err
 	}
 	if isAccount {
-		return "account", nil
+		return "FINANCE", nil
 	}
 
-	return "student", nil
+	return "STUDENT", nil
 }
 
 func (r AuthenRepositoryImplementation) AddStudent(rq request.CreateStudent) error {
