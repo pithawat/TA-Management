@@ -56,6 +56,7 @@ func (s CourseServiceImplementation) UpdateCourse(body request.UpdateCourse) (re
 func (s CourseServiceImplementation) DeleteCourse(id int) (response.GeneralResponse, error) {
 	err := s.repo.DeleteCourse(id)
 	if err != nil {
+		fmt.Println(err)
 		return response.GeneralResponse{Message: "Delete Failed!"}, err
 	}
 	return response.GeneralResponse{Message: "Delete Successful"}, err
@@ -114,4 +115,15 @@ func (s CourseServiceImplementation) GetApplicationPdf(applicationId int) (*cour
 		return nil, err
 	}
 	return applicationPdf, nil
+}
+
+func (s CourseServiceImplementation) ApproveApplication(applicationId int) (*response.GeneralResponse, error) {
+	err := s.repo.ApproveApplication(applicationId)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return &response.GeneralResponse{
+		Message: "Approved application Successful",
+	}, nil
 }

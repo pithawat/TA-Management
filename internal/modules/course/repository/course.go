@@ -15,4 +15,5 @@ type CourseRepository interface {
 	GetApplicationByCourseId(courseId int) ([]response.Application, error)
 	GetApplicationDetail(ApplicationId int) (*response.Application, error)
 	GetApplicationPdf(ApplicationId int) (*response.ApplicationTrancript, error)
+	ApproveApplication(ApplicationId int) error
 }

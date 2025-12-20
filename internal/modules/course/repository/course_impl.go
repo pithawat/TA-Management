@@ -44,7 +44,12 @@ func (r CourseRepositoryImplementation) GetAllCourse() ([]response.Course, error
 
 func (r CourseRepositoryImplementation) CreateCourse(body request.CreateCourse) (int, error) {
 
-	queryCheck := "SELECT COUNT(*) FROM courses WHERE course_ID=$1 AND course_program_ID=$2 AND sec=$3 AND semester_ID=$4 "
+	queryCheck := `SELECT COUNT(*) FROM courses 
+					WHERE course_ID=$1 
+					AND course_program_ID=$2 
+					AND sec=$3 
+					AND semester_ID=$4 
+					AND deleted_date IS NULL`
 
 	var count int
 
@@ -69,11 +74,21 @@ func (r CourseRepositoryImplementation) CreateCourse(body request.CreateCourse) 
 		return 0, err
 	}
 
-	query := `INSERT INTO courses(course_ID, course_name,
-	professor_ID, course_program_ID, course_program, sec, 
-	semester_ID, semester, class_day_ID, class_day, 
-	class_start, class_end) 
-	values ($1,$2,$3, $4, $5 ,$6 ,$7 ,$8 ,$9 ,$10 ,$11 ,$12)
+	query := `INSERT INTO courses(
+	course_ID, 
+	course_name,
+	professor_ID, 
+	course_program_ID, 
+	course_program, 
+	sec, 
+	semester_ID, 
+	semester, 
+	class_day_ID, 
+	class_day, 
+	class_start, 
+	class_end,
+	created_date) 
+	values ($1,$2,$3, $4, $5 ,$6 ,$7 ,$8 ,$9 ,$10 ,$11 ,$12, $13)
 	RETURNING id`
 
 	var lastInsertId int
@@ -91,6 +106,7 @@ func (r CourseRepositoryImplementation) CreateCourse(body request.CreateCourse) 
 		body.Classday,
 		body.ClassStart,
 		body.ClassEnd,
+		time.Now(),
 	).Scan(&lastInsertId)
 
 	if err != nil {
@@ -212,6 +228,13 @@ func (r CourseRepositoryImplementation) DeleteCourse(id int) error {
 	if err != nil {
 		return err
 	}
+
+	query = "UPDATE ta_job_posting SET deleted_date = $1 WHERE course_id = $2"
+	_, err = r.db.Exec(query, time.Now(), id)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -380,4 +403,54 @@ func (r CourseRepositoryImplementation) GetApplicationPdf(ApplicationId int) (*r
 		return nil, err
 	}
 	return &application, nil
+}
+
+func (r CourseRepositoryImplementation) ApproveApplication(ApplicationId int) error {
+
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	//get courseId,studentId
+	pendingStatus := 3
+	var courseId int
+	var studentId int
+	query := `SELECT course_ID, student_ID FROM ta_application WHERE id =$1 AND status_id =$2`
+
+	err = tx.QueryRow(query,
+		ApplicationId,
+		pendingStatus).Scan(&courseId, &studentId)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed get courseId : %v", err)
+	}
+
+	//update status on ta_application
+	activeStatus := 1
+	query = `UPDATE ta_application SET status_ID = $1 WHERE id = $2`
+
+	_, err = tx.Exec(query, activeStatus, ApplicationId)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed update ta_application: %v", err)
+	}
+
+	//Insert new ta_course
+	query = `INSERT INTO ta_courses(
+				student_ID,
+				course_ID,
+				created_date)
+				VALUES($1, $2, $3)`
+	_, err = tx.Exec(query, studentId, courseId, time.Now())
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to Insert new ta_course : %v", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed on commit transaction")
+	}
+	return nil
 }

@@ -33,7 +33,8 @@ func InitializeController(courseService service.CourseService, r *gin.RouterGrou
 		r.GET("/application/student/:studentId", c.getApplicationByStudentId)
 		r.GET("/application/course/:courseId", c.getApplicationBycourseId)
 		r.GET("/application/:applilcationId", c.getApplicationDetail)
-		r.GET("/applicatin/pdf/:applicationId", c.getApplicationPdf)
+		r.GET("/application/pdf/:applicationId", c.getApplicationPdf)
+		r.POST("/application/approve/:applicationId", c.approveApplication)
 	}
 }
 
@@ -217,4 +218,19 @@ func (controller CourseController) getApplicationPdf(ctx *gin.Context) {
 	} else {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "NO Transcript data found"})
 	}
+}
+
+func (controller CourseController) approveApplication(ctx *gin.Context) {
+	id, ok := utils.ValidateParam(ctx, "applicationId")
+	if !ok {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Validate Param Failed."})
+		return
+	}
+
+	result, err := controller.service.ApproveApplication(id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, result)
+		return
+	}
+
 }

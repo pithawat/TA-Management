@@ -16,4 +16,5 @@ type CourseService interface {
 	GetApplicationByCourseId(CourseId int) (*response.RequestDataResponse, error)
 	GetApplicationDetail(ApplicationId int) (*response.RequestDataResponse, error)
 	GetApplicationPdf(ApplicationId int) (*courseResponse.ApplicationTrancript, error)
+	ApproveApplication(ApplicationId int) (*response.GeneralResponse, error)
 }

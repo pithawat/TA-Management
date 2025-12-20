@@ -98,7 +98,7 @@ CREATE TABLE ta_job_posting(
     course_ID INTEGER ,
     grade_ID INTEGER NOT NULL,
     created_date TIMESTAMP ,
-    delete_date TIMESTAMP,
+    deleted_date TIMESTAMP,
     CONSTRAINT FK_status_ID
         FOREIGN KEY (status_ID)
         REFERENCES status(status_ID),
@@ -135,6 +135,18 @@ CREATE TABLE ta_application(
         REFERENCES transcript_storage(transcript_ID)
 );
 
+CREATE TABLE ta_courses(
+    id SERIAL PRIMARY KEY,
+    student_ID INT,
+    course_ID INT,
+    created_date TIMESTAMP,
+    CONSTRAINT FK_student_ID
+        FOREIGN KEY (student_ID)
+        REFERENCES students(student_ID),
+    CONSTRAINT FK_course_ID
+        FOREIGN KEY (course_ID)
+        REFERENCES courses(id)
+);
 
 
 

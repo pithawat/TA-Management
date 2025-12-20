@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"TA-management/internal/utils"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -31,8 +32,14 @@ func AuthMiddleware(jwtSecret []byte) gin.HandlerFunc {
 			ctx.Abort()
 			return
 		}
-		ctx.Set("claims", claims)
-		ctx.Next()
 
+		ctx.Set("claims", claims)
+		claimm, ok := ctx.Get("claims")
+		if !ok {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println(claimm)
+		ctx.Next()
 	}
 }
