@@ -6,6 +6,7 @@ import (
 	"TA-management/internal/modules/authen/repository"
 	"TA-management/internal/modules/shared/dto/response"
 	"TA-management/internal/utils"
+	"strconv"
 	"strings"
 
 	"encoding/json"
@@ -77,38 +78,49 @@ func (s AuthenServiceImplementation) HandleGoogleCallback(ctx *gin.Context, code
 	}
 
 	//addnew student data
-	if role == "student" {
+	var internalID string
 
+	switch strings.ToUpper(role) {
+	case "STUDENT":
 		studentID, ok := utils.ExtractDigits(gu.Email)
 		if !ok {
-			return "", nil, errors.New("failed to extract digit")
+			return "", nil, errors.New("failed to extract student ID from email")
 		}
+		internalID = strconv.Itoa(studentID)
 
-		name := strings.Fields(gu.Name)
-		if len(name) == 0 {
-			return "", nil, errors.New("google user have no name")
+		// Logic to ensure student exists in DB
+		nameParts := strings.Fields(gu.Name)
+		if len(nameParts) == 0 {
+			return "", nil, errors.New("google user has no name")
 		}
 
 		rq := request.CreateStudent{
 			StudentID: studentID,
-			Firstname: name[0],
+			Firstname: nameParts[0],
+		}
+		if len(nameParts) > 1 {
+			rq.Lastname = nameParts[1]
 		}
 
-		if len(name) > 1 {
-			rq.Lastname = name[1]
+		if err := s.repo.AddStudent(rq); err != nil {
+			fmt.Println("Warning: Could not add student (they might already exist):", err)
 		}
 
-		err := s.repo.AddStudent(rq)
+	case "PROFESSOR", "FINANCE", "ACCOUNTANT":
+		// Look up the ID from the database based on the name
+		dbID, err := s.repo.GetUserIDByName(gu.Name)
 		if err != nil {
-			fmt.Println(err)
-			return "", nil, errors.New("failed to add student")
+			return "", nil, errors.New("user not found in system records")
 		}
+		internalID = dbID
 
+	default:
+		return "", nil, errors.New("unauthorized role")
 	}
 
 	now := time.Now()
 	claims := AppClaims{
-		Sub:   gu.ID,
+		Sub:   internalID,
 		Email: gu.Email,
 		Name:  gu.Name,
 		Role:  role,

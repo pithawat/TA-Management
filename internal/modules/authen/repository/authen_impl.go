@@ -73,3 +73,22 @@ func (r AuthenRepositoryImplementation) AddStudent(rq request.CreateStudent) err
 
 	return nil
 }
+
+func (r AuthenRepositoryImplementation) GetUserIDByName(name string) (string, error) {
+
+	parts := strings.Split(name, " ")
+	if len(parts) != 2 {
+		return "", fmt.Errorf("invalid name format")
+	}
+	firstname := parts[0]
+	lastname := parts[1]
+
+	var id string
+	query := `SELECT id FROM students WHERE firstname = $1 AND lastname =$2`
+
+	err := r.db.QueryRow(query, firstname, lastname).Scan(&id)
+	if err != nil {
+		return "", err
+	}
+	return id, err
+}

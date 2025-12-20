@@ -66,7 +66,8 @@ func (r LookupRepositoryImplementation) GetSemester() (*[]response.LookupRespons
 	query := `SELECT 
 				semester_id, 
 				semester_value 
-			FROM semester`
+			FROM semester
+			ORDER BY start_date ASC`
 
 	rows, err := r.db.Query(query)
 	if err != nil {
