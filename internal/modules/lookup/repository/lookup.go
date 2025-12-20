@@ -6,4 +6,5 @@ type LookupRepository interface {
 	GetCourseProgram() (*[]response.LookupResponse, error)
 	GetClassday() (*[]response.LookupResponse, error)
 	GetSemester() (*[]response.LookupResponse, error)
+	GetGrade() (*[]response.LookupResponse, error)
 }

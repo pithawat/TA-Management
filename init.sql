@@ -18,6 +18,12 @@ CREATE TABLE status(
     status_value VARCHAR(20) NOT NULL
 );
 
+
+CREATE TABLE grades(
+    grade_ID  SERIAL PRIMARY KEY,
+    grade_value VARCHAR(10) NOT NULL
+);
+
 CREATE TABLE semester(
     semester_ID  SERIAL PRIMARY KEY,
     semester_value VARCHAR(10) NOT NULL,
@@ -237,3 +243,13 @@ INSERT INTO class_days (class_day_value) VALUES
 INSERT INTO course_programs (course_program_value) VALUES
     ('General'),
     ('International');
+
+--grades
+INSERT INTO grades (grade_value) VALUES
+    ('A'),
+    ('B+'),
+    ('B'),
+    ('C+'),
+    ('C'),
+    ('D+'),
+    ('D');

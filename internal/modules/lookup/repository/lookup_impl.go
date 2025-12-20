@@ -84,3 +84,27 @@ func (r LookupRepositoryImplementation) GetSemester() (*[]response.LookupRespons
 	}
 	return &semesters, nil
 }
+
+func (r LookupRepositoryImplementation) GetGrade() (*[]response.LookupResponse, error) {
+
+	query := `SELECT 
+				grade_id, 
+				grade_value 
+			FROM grades`
+
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+
+	var grades []response.LookupResponse
+	for rows.Next() {
+		var grade response.LookupResponse
+		err := rows.Scan(&grade.Id, &grade.Value)
+		if err != nil {
+			return nil, err
+		}
+		grades = append(grades, grade)
+	}
+	return &grades, nil
+}

@@ -3,6 +3,7 @@ package service
 import (
 	"TA-management/internal/modules/lookup/dto/response"
 	"TA-management/internal/modules/lookup/repository"
+	"fmt"
 )
 
 type LookupServiceImplementation struct {
@@ -32,6 +33,15 @@ func (s LookupServiceImplementation) GetClassday() (*[]response.LookupResponse, 
 func (s LookupServiceImplementation) GetSemester() (*[]response.LookupResponse, error) {
 	result, err := s.repo.GetSemester()
 	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (s LookupServiceImplementation) GetGrade() (*[]response.LookupResponse, error) {
+	result, err := s.repo.GetGrade()
+	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 	return result, nil
