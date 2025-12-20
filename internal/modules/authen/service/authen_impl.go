@@ -108,7 +108,7 @@ func (s AuthenServiceImplementation) HandleGoogleCallback(ctx *gin.Context, code
 
 	case "PROFESSOR", "FINANCE", "ACCOUNTANT":
 		// Look up the ID from the database based on the name
-		dbID, err := s.repo.GetUserIDByName(gu.Name)
+		dbID, err := s.repo.GetUserIDByName(gu.Name, role)
 		if err != nil {
 			return "", nil, errors.New("user not found in system records")
 		}
