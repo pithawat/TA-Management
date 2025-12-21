@@ -471,10 +471,12 @@ func (r CourseRepositoryImplementation) GetApplicationByStudentId(studentId int)
 	query := `SELECT 
 					ta.student_ID, 
 					ta.status_ID, 
-					ta.course_ID, 
+					tp.course_ID, 
 					ta.created_date,
 					st.status_value
 				FROM ta_application AS ta 
+				LEFT JOIN ta_job_posting AS tp
+					ON ta.job_post_ID = tp.id
 				LEFT JOIN status AS st
 					ON ta.status_ID = st.status_ID
 				WHERE student_ID = $1`
@@ -601,7 +603,13 @@ func (r CourseRepositoryImplementation) ApproveApplication(ApplicationId int) er
 	pendingStatus := 3
 	var courseId int
 	var studentId int
-	query := `SELECT course_ID, student_ID FROM ta_application WHERE id =$1 AND status_id =$2`
+	query := `SELECT 
+					jp.course_ID, 
+					ta.student_ID 
+				FROM ta_application as ta
+				LEFT JOIN ta_job_posting as jp
+					ON ta.job_post_ID = jp.id
+				WHERE ta.id =$1 AND ta.status_id =$2`
 
 	err = tx.QueryRow(query,
 		ApplicationId,
@@ -638,4 +646,50 @@ func (r CourseRepositoryImplementation) ApproveApplication(ApplicationId int) er
 		return fmt.Errorf("failed on commit transaction")
 	}
 	return nil
+}
+
+func (r CourseRepositoryImplementation) GetApplicationByProfessorId(professorId int) ([]response.Application, error) {
+	query := `SELECT 
+					ta.id,
+					ta.student_ID, 
+					ta.status_ID, 
+					jp.course_ID, 
+					ta.created_date,
+					st.status_value,
+					c.course_name
+				FROM ta_application AS ta 
+				LEFT JOIN status AS st
+					ON ta.status_ID = st.status_ID
+				LEFT JOIN ta_job_posting AS jp
+					ON ta.job_post_ID = jp.id
+				LEFT JOIN courses AS c
+					ON jp.course_ID = c.id
+				WHERE c.professor_ID = $1`
+
+	rows, err := r.db.Query(query, professorId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var applications []response.Application
+	for rows.Next() {
+		var application response.Application
+
+		err := rows.Scan(
+			&application.ApplicationId,
+			&application.StudentID,
+			&application.StatusID,
+			&application.CourseID,
+			&application.CreatedDate,
+			&application.StatusCode,
+			&application.CourseName,
+		)
+		if err != nil {
+			return nil, err
+		}
+		applications = append(applications, application)
+	}
+
+	return applications, nil
 }

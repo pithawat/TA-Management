@@ -19,4 +19,5 @@ type CourseService interface {
 	GetApplicationPdf(ApplicationId int) (*courseResponse.ApplicationTrancript, error)
 	ApproveApplication(ApplicationId int) (*response.GeneralResponse, error)
 	GetProfessorCourse(ProfessorId int) (*response.RequestDataResponse, error)
+	GetApplicationByProfessorId(professorId int) (*response.RequestDataResponse, error)
 }

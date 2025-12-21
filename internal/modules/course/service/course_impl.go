@@ -91,6 +91,7 @@ func (s CourseServiceImplementation) ApplyJobPost(body request.ApplyJobPost) (*r
 func (s CourseServiceImplementation) GetApplicationByStudentId(studentId int) (*response.RequestDataResponse, error) {
 	applications, err := s.repo.GetApplicationByStudentId(studentId)
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 	return &response.RequestDataResponse{
@@ -154,4 +155,16 @@ func (s CourseServiceImplementation) GetProfessorCourse(professorId int) (*respo
 	}
 
 	return &response, nil
+}
+
+func (s CourseServiceImplementation) GetApplicationByProfessorId(professorId int) (*response.RequestDataResponse, error) {
+	applications, err := s.repo.GetApplicationByProfessorId(professorId)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return &response.RequestDataResponse{
+		Data:    applications,
+		Message: "GET success",
+	}, nil
 }

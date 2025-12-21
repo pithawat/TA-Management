@@ -201,6 +201,21 @@ func (controller CourseController) getApplicationByStudentId(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, result)
 }
 
+func (controller CourseController) getApplicationByProfessorId(ctx *gin.Context) {
+	id, ok := utils.ValidateParam(ctx, "professorId")
+	if !ok {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Validate Param Failed."})
+		return
+	}
+
+	result, err := controller.service.GetApplicationByProfessorId(id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, result)
+		return
+	}
+	ctx.JSON(http.StatusOK, result)
+}
+
 func (controller CourseController) getApplicationBycourseId(ctx *gin.Context) {
 	id, ok := utils.ValidateParam(ctx, "courseId")
 	if !ok {
@@ -269,5 +284,5 @@ func (controller CourseController) approveApplication(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, result)
 		return
 	}
-
+	ctx.JSON(http.StatusCreated, result)
 }
