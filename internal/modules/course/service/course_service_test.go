@@ -296,15 +296,14 @@ func TestService_ApplyCourse_Integration(t *testing.T) {
 	}
 	courseId := 1
 	filename := "sample.pdf"
-	applyBody := request.ApplyCourse{
+	applyBody := request.ApplyJobPost{
 		StudentID: 12345,
-		StatusID:  3,
-		CourseID:  &courseId,
+		JobPostID: &courseId,
 		FileBytes: &fileBytes,
 		FileName:  &filename,
 	}
 
-	result, err := svc.ApplyCourse(applyBody)
+	result, err := svc.ApplyJobPost(applyBody)
 	if err != nil {
 		t.Errorf("ApplyCourse failed: %v", err)
 	}
@@ -353,15 +352,14 @@ func TestService_GetApplicationByStudentId_Integration(t *testing.T) {
 	courseId := 1
 	filename := "sample.pdf"
 	studentId := 12345
-	applyBody := request.ApplyCourse{
+	applyBody := request.ApplyJobPost{
 		StudentID: studentId,
-		StatusID:  3,
-		CourseID:  &courseId,
+		JobPostID: &courseId,
 		FileBytes: &fileBytes,
 		FileName:  &filename,
 	}
 
-	result, err := svc.ApplyCourse(applyBody)
+	result, err := svc.ApplyJobPost(applyBody)
 	if err != nil {
 		t.Errorf("ApplyCourse failed: %v", err)
 	}
@@ -418,15 +416,14 @@ func TestService_GetApplicationByCourseId_Integration(t *testing.T) {
 	}
 	courseId := 1
 	filename := "sample.pdf"
-	applyBody := request.ApplyCourse{
+	applyBody := request.ApplyJobPost{
 		StudentID: 12345,
-		StatusID:  3,
-		CourseID:  &courseId,
+		JobPostID: &courseId,
 		FileBytes: &fileBytes,
 		FileName:  &filename,
 	}
 
-	result, err := svc.ApplyCourse(applyBody)
+	result, err := svc.ApplyJobPost(applyBody)
 	if err != nil {
 		t.Errorf("ApplyCourse failed: %v", err)
 	}
@@ -483,15 +480,14 @@ func TestService_GetApplicationDetail_Integration(t *testing.T) {
 	}
 	courseId := 1
 	filename := "sample.pdf"
-	applyBody := request.ApplyCourse{
+	applyBody := request.ApplyJobPost{
 		StudentID: 12345,
-		StatusID:  3,
-		CourseID:  &courseId,
+		JobPostID: &courseId,
 		FileBytes: &fileBytes,
 		FileName:  &filename,
 	}
 
-	result, err := svc.ApplyCourse(applyBody)
+	result, err := svc.ApplyJobPost(applyBody)
 	if err != nil {
 		t.Errorf("ApplyCourse failed: %v", err)
 	}

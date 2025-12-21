@@ -31,6 +31,20 @@ func (s CourseServiceImplementation) GetAllCourse() (*response.RequestDataRespon
 	return &response, nil
 }
 
+func (s CourseServiceImplementation) GetAllCourseByStudentId(studentId int) (*response.RequestDataResponse, error) {
+	courses, err := s.repo.GetAllCourseByStudentId(studentId)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	response := response.RequestDataResponse{
+		Data:    courses,
+		Message: "Success",
+	}
+
+	return &response, nil
+}
+
 func (s CourseServiceImplementation) CreateCourse(body request.CreateCourse) (response.CreateResponse, error) {
 	id, err := s.repo.CreateCourse(body)
 	if err != nil {

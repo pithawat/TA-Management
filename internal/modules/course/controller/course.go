@@ -26,13 +26,15 @@ func InitializeController(courseService service.CourseService, r *gin.RouterGrou
 	r.Use()
 	{
 		r.GET("", c.findAllCourse)
-		r.GET("/:professorId", c.findProfessorCourse)
+		r.GET("/student/:studentId", c.GetAllCourseByStudentId)
+		r.GET("/professor/:professorId", c.findProfessorCourse)
 		r.POST("", c.createCourse)
 		r.PATCH("/:courseId", c.updateCourse)
 		r.DELETE("/:courseId", c.deleteCourse)
 		r.POST("/apply/:jobPostId", c.applyJobPost)
 		r.GET("/application/student/:studentId", c.getApplicationByStudentId)
 		r.GET("/application/course/:courseId", c.getApplicationBycourseId)
+		r.GET("/application/professor/:professorId", c.getApplicationByProfessorId)
 		r.GET("/application/:applilcationId", c.getApplicationDetail)
 		r.GET("/application/pdf/:applicationId", c.getApplicationPdf)
 		r.POST("/application/approve/:applicationId", c.approveApplication)
@@ -46,6 +48,22 @@ func (controller CourseController) findAllCourse(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong"})
 		return
 	}
+	ctx.JSON(http.StatusOK, result)
+}
+
+func (controller CourseController) GetAllCourseByStudentId(ctx *gin.Context) {
+
+	studentId, ok := utils.ValidateParam(ctx, "studentId")
+	if !ok {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Validation Param Failed"})
+		return
+	}
+
+	result, err := controller.service.GetAllCourseByStudentId(studentId)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong"})
+	}
+
 	ctx.JSON(http.StatusOK, result)
 }
 
@@ -184,7 +202,7 @@ func (controller CourseController) getApplicationByStudentId(ctx *gin.Context) {
 }
 
 func (controller CourseController) getApplicationBycourseId(ctx *gin.Context) {
-	id, ok := utils.ValidateParam(ctx, "studentId")
+	id, ok := utils.ValidateParam(ctx, "courseId")
 	if !ok {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Validate Param Failed."})
 		return
