@@ -22,6 +22,7 @@ func (r CourseRepositoryImplementation) GetAllCourse() ([]response.Course, error
 
 	query := `SELECT 
 				j.task,
+				j.id,
 				c.course_ID, 
 				c.course_name, 
 				c.ta_allocation, 
@@ -63,6 +64,7 @@ func (r CourseRepositoryImplementation) GetAllCourse() ([]response.Course, error
 		var lastname string
 		err := rows.Scan(
 			&course.Task,
+			&course.JobPostID,
 			&course.CourseID,
 			&course.CourseName,
 			&course.TaAllocation,
@@ -319,7 +321,7 @@ func (r CourseRepositoryImplementation) DeleteCourse(id int) error {
 	return nil
 }
 
-func (r CourseRepositoryImplementation) ApplyCourse(body request.ApplyCourse) (int, error) {
+func (r CourseRepositoryImplementation) ApplyJobPost(body request.ApplyJobPost) (int, error) {
 	tx, err := r.db.Begin()
 	if err != nil {
 		return 0, err
@@ -332,19 +334,28 @@ func (r CourseRepositoryImplementation) ApplyCourse(body request.ApplyCourse) (i
 		tx.Rollback()
 		return 0, fmt.Errorf("failed on insert to transcript file : %v", err)
 	}
+
 	fmt.Println(body.StudentID)
-	fmt.Println(body.StatusID)
+
 	var applicationId int
-	query = `INSERT INTO ta_application(transcript_ID, student_ID, 
-			status_ID, course_ID, created_date)
-			VALUES($1, $2, $3, $4, $5)
+	query = `INSERT INTO ta_application(
+				transcript_ID, 
+				student_ID, 
+				status_ID, 
+				job_post_ID,
+				grade,
+				purpose,
+				created_date)
+			VALUES($1, $2, $3, $4, $5, $6 ,$7)
 			RETURNING id`
 
 	err = tx.QueryRow(query,
 		fileId,
 		body.StudentID,
-		body.StatusID,
-		body.CourseID,
+		3,
+		body.JobPostID,
+		body.Grade,
+		body.JobPostID,
 		time.Now(),
 	).Scan(&applicationId)
 

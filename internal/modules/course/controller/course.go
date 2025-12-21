@@ -30,7 +30,7 @@ func InitializeController(courseService service.CourseService, r *gin.RouterGrou
 		r.POST("", c.createCourse)
 		r.PATCH("/:courseId", c.updateCourse)
 		r.DELETE("/:courseId", c.deleteCourse)
-		r.POST("/apply/:courseId", c.applyCourse)
+		r.POST("/apply/:jobPostId", c.applyJobPost)
 		r.GET("/application/student/:studentId", c.getApplicationByStudentId)
 		r.GET("/application/course/:courseId", c.getApplicationBycourseId)
 		r.GET("/application/:applilcationId", c.getApplicationDetail)
@@ -120,9 +120,9 @@ func (controller CourseController) deleteCourse(ctx *gin.Context) {
 
 }
 
-func (controller CourseController) applyCourse(ctx *gin.Context) {
-	rq := request.ApplyCourse{}
-	id, ok := utils.ValidateParam(ctx, "courseId")
+func (controller CourseController) applyJobPost(ctx *gin.Context) {
+	rq := request.ApplyJobPost{}
+	id, ok := utils.ValidateParam(ctx, "jobPostId")
 	if !ok {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Validate Param Failed."})
 		return
@@ -153,11 +153,11 @@ func (controller CourseController) applyCourse(ctx *gin.Context) {
 		return
 	}
 
-	rq.CourseID = &id
+	rq.JobPostID = &id
 	rq.FileBytes = &fileBytes
 	rq.FileName = &fileHeader.Filename
 
-	result, err := controller.service.ApplyCourse(rq)
+	result, err := controller.service.ApplyJobPost(rq)
 	if err != nil {
 		fmt.Println(err)
 		ctx.JSON(http.StatusInternalServerError, result)

@@ -63,8 +63,8 @@ func (s CourseServiceImplementation) DeleteCourse(id int) (response.GeneralRespo
 	return response.GeneralResponse{Message: "Delete Successful"}, err
 }
 
-func (s CourseServiceImplementation) ApplyCourse(body request.ApplyCourse) (*response.CreateResponse, error) {
-	id, err := s.repo.ApplyCourse(body)
+func (s CourseServiceImplementation) ApplyJobPost(body request.ApplyJobPost) (*response.CreateResponse, error) {
+	id, err := s.repo.ApplyJobPost(body)
 	if err != nil {
 		return nil, err
 	}

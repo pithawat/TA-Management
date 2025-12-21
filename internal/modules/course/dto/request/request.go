@@ -56,10 +56,11 @@ type UpdateCourse struct {
 	Id              int        `json:"id"`
 }
 
-type ApplyCourse struct {
-	StudentID int `form:"studentID"`
-	StatusID  int `form:"statusID"`
-	CourseID  *int
+type ApplyJobPost struct {
+	StudentID int    `form:"studentID"`
+	Grade     string `form:"grade"`
+	Purpose   string `form:"purpose"`
+	JobPostID *int
 	FileBytes *[]byte
 	FileName  *string
 }

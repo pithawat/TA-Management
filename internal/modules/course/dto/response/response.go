@@ -16,6 +16,7 @@ type Course struct {
 	ProfessorName string `json:"professorName"`
 	Semester      string `json:"semester"`
 	Status        string `json:"status"`
+	JobPostID     int    `json:"jobPostID"`
 }
 
 type Application struct {
