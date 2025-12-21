@@ -43,7 +43,7 @@ func (controller CourseController) findAllCourse(ctx *gin.Context) {
 	//validate
 	result, err := controller.service.GetAllCourse()
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong"})
 		return
 	}
 	ctx.JSON(http.StatusOK, result)

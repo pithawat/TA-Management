@@ -20,6 +20,7 @@ func (s CourseServiceImplementation) GetAllCourse() (*response.RequestDataRespon
 
 	courses, err := s.repo.GetAllCourse()
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 	response := response.RequestDataResponse{

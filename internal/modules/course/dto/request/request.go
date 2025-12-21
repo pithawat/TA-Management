@@ -35,6 +35,7 @@ type CreateCourse struct {
 	GradeID         int       `json:"gradeID"`
 	Task            string    `json:"task"`
 	WorkHour        int       `json:"workHour"`
+	Location        string    `json:"location"`
 	CreatedDate     time.Time `json:"-"`
 }
 

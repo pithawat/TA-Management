@@ -20,11 +20,34 @@ func NewCourseRepository(DB *sql.DB) CourseRepositoryImplementation {
 
 func (r CourseRepositoryImplementation) GetAllCourse() ([]response.Course, error) {
 
-	query := `SELECT course_ID, 
-				course_name, 
-				ta_allocation, 
-				work_hour 
-			FROM courses`
+	query := `SELECT 
+				j.task,
+				c.course_ID, 
+				c.course_name, 
+				c.ta_allocation, 
+				c.work_hour,
+				c.class_start,
+				c.class_end,
+				c.location,
+				cd.class_day_value, 
+				p.firstname,
+				p.lastname,
+				s.semester_value,
+				st.status_value,
+				g.grade_value
+			FROM ta_job_posting AS j
+			LEFT JOIN courses AS c
+				ON j.course_ID = c.id
+			LEFT JOIN class_days AS cd
+				ON c.class_day_ID = cd.class_day_ID 
+			LEFT JOIN professors AS p
+				ON c.professor_ID = p.professor_ID
+			LEFT JOIN semester AS s
+				ON c.semester_ID = s.semester_ID
+			LEFT JOIN status AS st
+				ON j.status_ID = st.status_ID
+			LEFT JOIN grades AS g
+				ON j.grade_ID = g.grade_ID`
 
 	rows, err := r.db.Query(query)
 	if err != nil {
@@ -36,11 +59,28 @@ func (r CourseRepositoryImplementation) GetAllCourse() ([]response.Course, error
 	var courses []response.Course
 	for rows.Next() {
 		var course response.Course
-
-		err := rows.Scan(&course.CourseID, &course.CourseName, &course.TaAllocation, &course.WorkHour)
+		var firstname string
+		var lastname string
+		err := rows.Scan(
+			&course.Task,
+			&course.CourseID,
+			&course.CourseName,
+			&course.TaAllocation,
+			&course.WorkHour,
+			&course.ClassStart,
+			&course.ClassEnd,
+			&course.Location,
+			&course.Classday,
+			&firstname,
+			&lastname,
+			&course.Semester,
+			&course.Status,
+			&course.Grade,
+		)
 		if err != nil {
 			return nil, err
 		}
+		course.ProfessorName = firstname + " " + lastname
 		courses = append(courses, course)
 	}
 
@@ -124,8 +164,9 @@ func (r CourseRepositoryImplementation) CreateCourse(body request.CreateCourse) 
 	class_end,
 	work_hour,
 	ta_allocation,
+	location,
 	created_date) 
-	values ($1,$2,$3, $4, $5 ,$6 ,$7 ,$8 ,$9 ,$10 ,$11 ,$12, $13, $14, $15)
+	values ($1,$2,$3, $4, $5 ,$6 ,$7 ,$8 ,$9 ,$10 ,$11 ,$12, $13, $14, $15, $16)
 	RETURNING id`
 
 	var lastInsertId int
@@ -145,6 +186,7 @@ func (r CourseRepositoryImplementation) CreateCourse(body request.CreateCourse) 
 		body.ClassEnd,
 		body.WorkHour,
 		body.TaAllocation,
+		body.Location,
 		time.Now(),
 	).Scan(&lastInsertId)
 
