@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -106,4 +107,28 @@ func ExtractDigits(s string) (int, bool) {
 		return 0, false
 	}
 	return number, true
+}
+
+func GetFileData(ctx *gin.Context, key string) (string, *[]byte, error) {
+
+	fileHeader, err := ctx.FormFile("pdfFile")
+	if err != nil {
+		fmt.Println(err)
+		return "", nil, fmt.Errorf("File is required.")
+	}
+
+	file, err := fileHeader.Open()
+	if err != nil {
+		fmt.Println(err)
+		return "", nil, fmt.Errorf("Failed to open file.")
+	}
+	defer file.Close()
+
+	fileBytes, err := io.ReadAll(file)
+	if err != nil {
+		fmt.Println(err)
+		return "", nil, fmt.Errorf("Failed to read file.")
+	}
+
+	return fileHeader.Filename, &fileBytes, nil
 }

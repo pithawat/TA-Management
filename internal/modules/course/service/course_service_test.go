@@ -297,10 +297,10 @@ func TestService_ApplyCourse_Integration(t *testing.T) {
 	courseId := 1
 	filename := "sample.pdf"
 	applyBody := request.ApplyJobPost{
-		StudentID: 12345,
-		JobPostID: &courseId,
-		FileBytes: &fileBytes,
-		FileName:  &filename,
+		StudentID:       12345,
+		JobPostID:       &courseId,
+		TranscriptBytes: &fileBytes,
+		TranscriptName:  &filename,
 	}
 
 	result, err := svc.ApplyJobPost(applyBody)
@@ -353,10 +353,10 @@ func TestService_GetApplicationByStudentId_Integration(t *testing.T) {
 	filename := "sample.pdf"
 	studentId := 12345
 	applyBody := request.ApplyJobPost{
-		StudentID: studentId,
-		JobPostID: &courseId,
-		FileBytes: &fileBytes,
-		FileName:  &filename,
+		StudentID:       studentId,
+		JobPostID:       &courseId,
+		TranscriptBytes: &fileBytes,
+		TranscriptName:  &filename,
 	}
 
 	result, err := svc.ApplyJobPost(applyBody)
@@ -417,10 +417,10 @@ func TestService_GetApplicationByCourseId_Integration(t *testing.T) {
 	courseId := 1
 	filename := "sample.pdf"
 	applyBody := request.ApplyJobPost{
-		StudentID: 12345,
-		JobPostID: &courseId,
-		FileBytes: &fileBytes,
-		FileName:  &filename,
+		StudentID:       12345,
+		JobPostID:       &courseId,
+		TranscriptBytes: &fileBytes,
+		TranscriptName:  &filename,
 	}
 
 	result, err := svc.ApplyJobPost(applyBody)
@@ -481,10 +481,10 @@ func TestService_GetApplicationDetail_Integration(t *testing.T) {
 	courseId := 1
 	filename := "sample.pdf"
 	applyBody := request.ApplyJobPost{
-		StudentID: 12345,
-		JobPostID: &courseId,
-		FileBytes: &fileBytes,
-		FileName:  &filename,
+		StudentID:       12345,
+		JobPostID:       &courseId,
+		TranscriptBytes: &fileBytes,
+		TranscriptName:  &filename,
 	}
 
 	result, err := svc.ApplyJobPost(applyBody)

@@ -5,7 +5,6 @@ import (
 	"TA-management/internal/modules/course/service"
 	"TA-management/internal/utils"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -146,23 +145,19 @@ func (controller CourseController) applyJobPost(ctx *gin.Context) {
 		return
 	}
 
-	fileHeader, err := ctx.FormFile("pdfFile")
+	transcriptName, transcriptBytes, err := utils.GetFileData(ctx, "Transcript")
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "File is required."})
-		return
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	}
 
-	file, err := fileHeader.Open()
+	bankAccountName, bankAccountBytes, err := utils.GetFileData(ctx, "BankAccount")
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Failed to open file."})
-		return
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	}
-	defer file.Close()
 
-	fileBytes, err := io.ReadAll(file)
+	studentCardName, studentCardBytes, err := utils.GetFileData(ctx, "StudentCard")
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read file."})
-		return
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	}
 
 	if err := ctx.ShouldBind(&rq); err != nil {
@@ -172,8 +167,12 @@ func (controller CourseController) applyJobPost(ctx *gin.Context) {
 	}
 
 	rq.JobPostID = &id
-	rq.FileBytes = &fileBytes
-	rq.FileName = &fileHeader.Filename
+	rq.TranscriptName = &transcriptName
+	rq.TranscriptBytes = transcriptBytes
+	rq.BankAccountName = &bankAccountName
+	rq.BankAccountBytes = bankAccountBytes
+	rq.StudentCardName = &studentCardName
+	rq.StudentCardBytes = studentCardBytes
 
 	result, err := controller.service.ApplyJobPost(rq)
 	if err != nil {
@@ -263,7 +262,7 @@ func (controller CourseController) getApplicationPdf(ctx *gin.Context) {
 
 	if result != nil {
 		fileName := "transcript_" + result.FileName + "pdf."
-		ctx.Header("Content-Disposition", "attachment; filename="+fileName)
+		ctx.Header("Content-Disposition", "inline; filename="+fileName)
 		ctx.Header("Content-Type", "application/pdf")
 
 		ctx.Data(http.StatusOK, "application/pdf", result.Transcript)

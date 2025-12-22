@@ -58,6 +58,21 @@ CREATE TABLE transcript_storage(
 );
 
 --verified
+CREATE TABLE bank_account_storage(
+    bank_account_ID SERIAL PRIMARY KEY,
+    file_bytes BYTEA,
+    file_name VARCHAR(30)
+);
+
+--verified
+CREATE TABLE student_card_storage(
+    student_card_ID SERIAL PRIMARY KEY,
+    file_bytes BYTEA,
+    file_name VARCHAR(30)
+);
+
+
+--verified
 CREATE TABLE courses(
     id SERIAL PRIMARY KEY,
     course_ID VARCHAR(20) NOT NULL,
@@ -119,6 +134,8 @@ CREATE TABLE ta_job_posting(
 CREATE TABLE ta_application(
     id SERIAL PRIMARY KEY,
     transcript_ID INT NOT NULL,
+    bank_account_ID INT NOT NULL,
+    student_card_ID INT NOT NULL,
     student_ID INT NOT NULL,
     status_ID INT NOT NULL,
     job_post_ID INT NOT NULL,
@@ -138,6 +155,12 @@ CREATE TABLE ta_application(
     CONSTRAINT FK_transcript_ID
         FOREIGN KEY (transcript_ID)
         REFERENCES transcript_storage(transcript_ID)
+    CONSTRAINT FK_bank_account_ID
+        FOREIGN KEY (bank_account_ID)
+        REFERENCES bank_account_storage(bank_account_ID),
+    CONSTRAINT FK_student_card_ID
+        FOREIGN KEY (student_card_ID)
+        REFERENCES student_card_storage(student_card_ID)
 );
 
 CREATE TABLE ta_courses(
