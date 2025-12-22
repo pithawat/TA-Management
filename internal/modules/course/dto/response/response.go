@@ -5,6 +5,7 @@ import "time"
 type Course struct {
 	CourseID      string `json:"courseID"`
 	CourseName    string `json:"courseName"`
+	CourseProgram string `json:"courseProgram"`
 	TaAllocation  int    `json:"taAllocation"`
 	WorkHour      int    `json:"workHour"`
 	ClassStart    string `json:"classStart"`

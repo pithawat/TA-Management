@@ -30,6 +30,7 @@ func (r CourseRepositoryImplementation) GetAllCourse() ([]response.Course, error
 				c.class_start,
 				c.class_end,
 				c.location,
+				c.course_program,
 				cd.class_day_value, 
 				p.firstname,
 				p.lastname,
@@ -72,6 +73,7 @@ func (r CourseRepositoryImplementation) GetAllCourse() ([]response.Course, error
 			&course.ClassStart,
 			&course.ClassEnd,
 			&course.Location,
+			&course.CourseProgram,
 			&course.Classday,
 			&firstname,
 			&lastname,
@@ -101,6 +103,7 @@ func (r CourseRepositoryImplementation) GetAllCourseByStudentId(studentId int) (
 				c.class_start,
 				c.class_end,
 				c.location,
+				c.course_program,
 				cd.class_day_value, 
 				p.firstname,
 				p.lastname,
@@ -149,6 +152,7 @@ func (r CourseRepositoryImplementation) GetAllCourseByStudentId(studentId int) (
 			&course.ClassStart,
 			&course.ClassEnd,
 			&course.Location,
+			&course.CourseProgram,
 			&course.Classday,
 			&firstname,
 			&lastname,
@@ -274,6 +278,7 @@ func (r CourseRepositoryImplementation) CreateCourse(body request.CreateCourse) 
 		return 0, err
 	}
 
+	statusID := 1
 	//Insert ta_jobposting
 	query = `INSERT INTO ta_job_posting(
 	professor_ID, 
@@ -292,7 +297,7 @@ func (r CourseRepositoryImplementation) CreateCourse(body request.CreateCourse) 
 		body.GradeID,
 		body.Task,
 		body.TaAllocation,
-		3,
+		statusID,
 		time.Now(),
 	)
 	if err != nil {
@@ -430,6 +435,7 @@ func (r CourseRepositoryImplementation) ApplyJobPost(body request.ApplyJobPost) 
 
 	fmt.Println(body.StudentID)
 
+	statusId := 3
 	var applicationId int
 	query = `INSERT INTO ta_application(
 				transcript_ID, 
@@ -445,7 +451,7 @@ func (r CourseRepositoryImplementation) ApplyJobPost(body request.ApplyJobPost) 
 	err = tx.QueryRow(query,
 		fileId,
 		body.StudentID,
-		3,
+		statusId,
 		body.JobPostID,
 		body.Grade,
 		body.JobPostID,
