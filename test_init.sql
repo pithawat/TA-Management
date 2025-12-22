@@ -247,7 +247,7 @@ AND final_semesters.start_date < '2030-07-01'::date;
 INSERT INTO status (status_value) VALUES
     ('OPEN'),
     ('CLOSE'),
-    ('PENDING')
+    ('PENDING'),
     ('REJECTED'),
     ('APPROVED');
 
