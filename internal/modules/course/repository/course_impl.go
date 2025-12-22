@@ -435,7 +435,7 @@ func (r CourseRepositoryImplementation) ApplyJobPost(body request.ApplyJobPost) 
 
 	fmt.Println(body.StudentID)
 
-	statusId := 3
+	statusId := 5
 	var applicationId int
 	query = `INSERT INTO ta_application(
 				transcript_ID, 
@@ -583,7 +583,7 @@ func (r CourseRepositoryImplementation) GetApplicationPdf(ApplicationId int) (*r
 				fs.file_name,
 				fs.file_bytes
 			FROM ta_application as ta
-			LEFT JOIN file_storage as fs
+			LEFT JOIN transcript_storage as fs
 			ON ta.transcript_ID = fs.transcript_ID
 			WHERE ta.id = $1`
 
@@ -626,10 +626,10 @@ func (r CourseRepositoryImplementation) ApproveApplication(ApplicationId int) er
 	}
 
 	//update status on ta_application
-	activeStatus := 1
+	approveStatus := 5
 	query = `UPDATE ta_application SET status_ID = $1 WHERE id = $2`
 
-	_, err = tx.Exec(query, activeStatus, ApplicationId)
+	_, err = tx.Exec(query, approveStatus, ApplicationId)
 	if err != nil {
 		tx.Rollback()
 		return fmt.Errorf("failed update ta_application: %v", err)
@@ -662,7 +662,10 @@ func (r CourseRepositoryImplementation) GetApplicationByProfessorId(professorId 
 					jp.course_ID, 
 					ta.created_date,
 					st.status_value,
-					c.course_name
+					c.course_name,
+					ta.grade,
+					stu.firstname,
+					stu.lastname
 				FROM ta_application AS ta 
 				LEFT JOIN status AS st
 					ON ta.status_ID = st.status_ID
@@ -670,6 +673,8 @@ func (r CourseRepositoryImplementation) GetApplicationByProfessorId(professorId 
 					ON ta.job_post_ID = jp.id
 				LEFT JOIN courses AS c
 					ON jp.course_ID = c.id
+				LEFT JOIN students AS stu
+					ON ta.student_id = stu.student_id
 				WHERE c.professor_ID = $1`
 
 	rows, err := r.db.Query(query, professorId)
@@ -681,6 +686,8 @@ func (r CourseRepositoryImplementation) GetApplicationByProfessorId(professorId 
 	var applications []response.Application
 	for rows.Next() {
 		var application response.Application
+		var firstname string
+		var lastname string
 
 		err := rows.Scan(
 			&application.ApplicationId,
@@ -690,10 +697,15 @@ func (r CourseRepositoryImplementation) GetApplicationByProfessorId(professorId 
 			&application.CreatedDate,
 			&application.StatusCode,
 			&application.CourseName,
+			&application.Grade,
+			&firstname,
+			&lastname,
 		)
 		if err != nil {
 			return nil, err
 		}
+
+		application.StudentName = firstname + " " + lastname
 		applications = append(applications, application)
 	}
 

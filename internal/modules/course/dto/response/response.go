@@ -27,6 +27,8 @@ type Application struct {
 	StudentID     int       `json:"studentID"`
 	StatusID      int       `json:"statusID"`
 	StatusCode    string    `json:"statusCode"`
+	Grade         string    `json:"grade"`
+	StudentName   string    `json:"studentName"`
 	CreatedDate   time.Time `json:"createdDate"`
 }
 
