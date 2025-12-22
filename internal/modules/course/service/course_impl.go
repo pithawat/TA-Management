@@ -124,8 +124,26 @@ func (s CourseServiceImplementation) GetApplicationDetail(applicationId int) (*r
 
 }
 
-func (s CourseServiceImplementation) GetApplicationPdf(applicationId int) (*courseResponse.ApplicationTrancript, error) {
-	applicationPdf, err := s.repo.GetApplicationPdf(applicationId)
+func (s CourseServiceImplementation) GetApplicationTranscriptPdf(applicationId int) (*courseResponse.PdfFile, error) {
+	applicationPdf, err := s.repo.GetApplicationTranscriptPdf(applicationId)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return applicationPdf, nil
+}
+
+func (s CourseServiceImplementation) GetApplicationBankAccountPdf(applicationId int) (*courseResponse.PdfFile, error) {
+	applicationPdf, err := s.repo.GetApplicationBankAccountPdf(applicationId)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return applicationPdf, nil
+}
+
+func (s CourseServiceImplementation) GetApplicationStudentCardPdf(applicationId int) (*courseResponse.PdfFile, error) {
+	applicationPdf, err := s.repo.GetApplicationStudentCardPdf(applicationId)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

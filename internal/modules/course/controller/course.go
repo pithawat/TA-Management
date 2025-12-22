@@ -35,7 +35,9 @@ func InitializeController(courseService service.CourseService, r *gin.RouterGrou
 		r.GET("/application/course/:courseId", c.getApplicationBycourseId)
 		r.GET("/application/professor/:professorId", c.getApplicationByProfessorId)
 		r.GET("/application/:applilcationId", c.getApplicationDetail)
-		r.GET("/application/pdf/:applicationId", c.getApplicationPdf)
+		r.GET("/application/transcript/:applicationId", c.getApplicationtranscriptPdf)
+		r.GET("/applicton/bankaccount/:applicationId", c.getApplicationbankAccountPdf)
+		r.GET("/application/studentcard/:applicationId", c.getApplicationstudentCardPdf)
 		r.POST("/application/approve/:applicationId", c.approveApplication)
 	}
 }
@@ -247,14 +249,14 @@ func (controller CourseController) getApplicationDetail(ctx *gin.Context) {
 
 }
 
-func (controller CourseController) getApplicationPdf(ctx *gin.Context) {
+func (controller CourseController) getApplicationtranscriptPdf(ctx *gin.Context) {
 	id, ok := utils.ValidateParam(ctx, "applicationId")
 	if !ok {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Validate Param Failed."})
 		return
 	}
 
-	result, err := controller.service.GetApplicationPdf(id)
+	result, err := controller.service.GetApplicationTranscriptPdf(id)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, result)
 		return
@@ -265,9 +267,52 @@ func (controller CourseController) getApplicationPdf(ctx *gin.Context) {
 		ctx.Header("Content-Disposition", "inline; filename="+fileName)
 		ctx.Header("Content-Type", "application/pdf")
 
-		ctx.Data(http.StatusOK, "application/pdf", result.Transcript)
+		ctx.Data(http.StatusOK, "application/pdf", result.FileBytes)
 	} else {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "NO Transcript data found"})
+	}
+}
+
+func (controller CourseController) getApplicationbankAccountPdf(ctx *gin.Context) {
+	id, ok := utils.ValidateParam(ctx, "applicationId")
+	if !ok {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Validate Param Failed."})
+		return
+	}
+	result, err := controller.service.GetApplicationBankAccountPdf(id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, result)
+		return
+	}
+	if result != nil {
+		fileName := "bank_account_" + result.FileName + "pdf."
+		ctx.Header("Content-Disposition", "inline; filename="+fileName)
+		ctx.Header("Content-Type", "application/pdf")
+
+		ctx.Data(http.StatusOK, "application/pdf", result.FileBytes)
+	} else {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "NO Bank Account data found"})
+	}
+}
+
+func (controller CourseController) getApplicationstudentCardPdf(ctx *gin.Context) {
+	id, ok := utils.ValidateParam(ctx, "applicationId")
+	if !ok {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Validate Param Failed."})
+		return
+	}
+	result, err := controller.service.GetApplicationStudentCardPdf(id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, result)
+		return
+	}
+	if result != nil {
+		fileName := "student_card_" + result.FileName + "pdf."
+		ctx.Header("Content-Disposition", "inline; filename="+fileName)
+		ctx.Header("Content-Type", "application/pdf")
+		ctx.Data(http.StatusOK, "application/pdf", result.FileBytes)
+	} else {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "NO Student Card data found"})
 	}
 }
 

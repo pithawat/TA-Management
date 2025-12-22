@@ -606,7 +606,7 @@ func (r CourseRepositoryImplementation) GetApplicationDetail(ApplicationId int) 
 	return &application, nil
 }
 
-func (r CourseRepositoryImplementation) GetApplicationPdf(ApplicationId int) (*response.ApplicationTrancript, error) {
+func (r CourseRepositoryImplementation) GetApplicationTranscriptPdf(ApplicationId int) (*response.PdfFile, error) {
 	query := `SELECT
 				fs.file_name,
 				fs.file_bytes
@@ -615,15 +615,53 @@ func (r CourseRepositoryImplementation) GetApplicationPdf(ApplicationId int) (*r
 			ON ta.transcript_ID = fs.transcript_ID
 			WHERE ta.id = $1`
 
-	var application response.ApplicationTrancript
+	var application response.PdfFile
 	err := r.db.QueryRow(query, ApplicationId).Scan(
 		&application.FileName,
-		&application.Transcript,
+		&application.FileBytes,
 	)
 	if err != nil {
 		return nil, err
 	}
 	return &application, nil
+}
+
+func (r CourseRepositoryImplementation) GetApplicationBankAccountPdf(ApplicationId int) (*response.PdfFile, error) {
+	query := `SELECT
+				fs.file_name,
+				fs.file_bytes
+			FROM ta_application as ta
+			LEFT JOIN bank_account_storage as fs
+			ON ta.bank_account_ID = fs.bank_account_ID
+			WHERE ta.id = $1`
+	var applicationPdf response.PdfFile
+	err := r.db.QueryRow(query, ApplicationId).Scan(
+		&applicationPdf.FileName,
+		&applicationPdf.FileBytes,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &applicationPdf, nil
+}
+
+func (r CourseRepositoryImplementation) GetApplicationStudentCardPdf(ApplicationId int) (*response.PdfFile, error) {
+	query := `SELECT
+				fs.file_name,
+				fs.file_bytes
+			FROM ta_application as ta
+			LEFT JOIN student_card_storage as fs
+			ON ta.student_card_ID = fs.student_card_ID
+			WHERE ta.id = $1`
+	var applicationPdf response.PdfFile
+	err := r.db.QueryRow(query, ApplicationId).Scan(
+		&applicationPdf.FileName,
+		&applicationPdf.FileBytes,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &applicationPdf, nil
 }
 
 func (r CourseRepositoryImplementation) ApproveApplication(ApplicationId int) error {

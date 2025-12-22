@@ -154,7 +154,7 @@ CREATE TABLE ta_application(
         REFERENCES ta_job_posting(id),
     CONSTRAINT FK_transcript_ID
         FOREIGN KEY (transcript_ID)
-        REFERENCES transcript_storage(transcript_ID)
+        REFERENCES transcript_storage(transcript_ID),
     CONSTRAINT FK_bank_account_ID
         FOREIGN KEY (bank_account_ID)
         REFERENCES bank_account_storage(bank_account_ID),

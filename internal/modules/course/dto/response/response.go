@@ -35,7 +35,7 @@ type Application struct {
 	CreatedDate   time.Time `json:"createdDate"`
 }
 
-type ApplicationTrancript struct {
-	FileName   string
-	Transcript []byte
+type PdfFile struct {
+	FileName  string
+	FileBytes []byte
 }
