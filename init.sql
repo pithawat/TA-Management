@@ -48,7 +48,8 @@ CREATE TABLE accountants(
 CREATE TABLE students(
     student_ID INTEGER PRIMARY KEY,
     firstname VARCHAR(100),
-    lastname VARCHAR(100) 
+    lastname VARCHAR(100) ,
+    phone_number  VARCHAR(20) 
 );
 
 --verified

@@ -67,4 +67,5 @@ type ApplyJobPost struct {
 	BankAccountName  *string
 	StudentCardBytes *[]byte
 	StudentCardName  *string
+	PhoneNumber      *string `form:"phoneNumber"`
 }

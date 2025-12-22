@@ -36,7 +36,7 @@ func InitializeController(courseService service.CourseService, r *gin.RouterGrou
 		r.GET("/application/professor/:professorId", c.getApplicationByProfessorId)
 		r.GET("/application/:applilcationId", c.getApplicationDetail)
 		r.GET("/application/transcript/:applicationId", c.getApplicationtranscriptPdf)
-		r.GET("/applicton/bankaccount/:applicationId", c.getApplicationbankAccountPdf)
+		r.GET("/application/bankaccount/:applicationId", c.getApplicationbankAccountPdf)
 		r.GET("/application/studentcard/:applicationId", c.getApplicationstudentCardPdf)
 		r.POST("/application/approve/:applicationId", c.approveApplication)
 	}
@@ -150,16 +150,19 @@ func (controller CourseController) applyJobPost(ctx *gin.Context) {
 	transcriptName, transcriptBytes, err := utils.GetFileData(ctx, "Transcript")
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	bankAccountName, bankAccountBytes, err := utils.GetFileData(ctx, "BankAccount")
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	studentCardName, studentCardBytes, err := utils.GetFileData(ctx, "StudentCard")
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	if err := ctx.ShouldBind(&rq); err != nil {

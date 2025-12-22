@@ -111,23 +111,23 @@ func ExtractDigits(s string) (int, bool) {
 
 func GetFileData(ctx *gin.Context, key string) (string, *[]byte, error) {
 
-	fileHeader, err := ctx.FormFile("pdfFile")
+	fileHeader, err := ctx.FormFile(key)
 	if err != nil {
 		fmt.Println(err)
-		return "", nil, fmt.Errorf("File is required.")
+		return "", nil, fmt.Errorf("file is required.")
 	}
 
 	file, err := fileHeader.Open()
 	if err != nil {
 		fmt.Println(err)
-		return "", nil, fmt.Errorf("Failed to open file.")
+		return "", nil, fmt.Errorf("failed to open file.")
 	}
 	defer file.Close()
 
 	fileBytes, err := io.ReadAll(file)
 	if err != nil {
 		fmt.Println(err)
-		return "", nil, fmt.Errorf("Failed to read file.")
+		return "", nil, fmt.Errorf("failed to read file.")
 	}
 
 	return fileHeader.Filename, &fileBytes, nil

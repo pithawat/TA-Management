@@ -449,7 +449,7 @@ func (r CourseRepositoryImplementation) ApplyJobPost(body request.ApplyJobPost) 
 		return 0, fmt.Errorf("failed on insert to student card file : %v", err)
 	}
 
-	statusId := 5
+	statusId := 3
 	var applicationId int
 	query = `INSERT INTO ta_application(
 				transcript_ID, 
@@ -479,6 +479,13 @@ func (r CourseRepositoryImplementation) ApplyJobPost(body request.ApplyJobPost) 
 	if err != nil {
 		tx.Rollback()
 		return 0, fmt.Errorf("failed on insert to ta_application: %v", err)
+	}
+
+	query = "UPDATE students SET phone_number = $1 WHERE student_ID = $2"
+	_, err = tx.Exec(query, body.PhoneNumber, body.StudentID)
+	if err != nil {
+		tx.Rollback()
+		return 0, fmt.Errorf("failed on update to students: %v", err)
 	}
 
 	err = tx.Commit()
@@ -585,11 +592,14 @@ func (r CourseRepositoryImplementation) GetApplicationDetail(ApplicationId int) 
 					ta.status_ID, 
 					ta.course_ID, 
 					ta.created_date,
-					st.status_value
+					st.status_value,
+					s.phone_number
 				FROM ta_application AS ta 
 				LEFT JOIN status AS st
 					ON ta.status_ID = st.status_ID
-				WHERE id = $1`
+				LEFT JOIN students AS s
+					ON ta.student_ID = s.student_ID
+				WHERE ta.id = $1`
 
 	var application response.Application
 	err := r.db.QueryRow(query, ApplicationId).Scan(
@@ -598,6 +608,7 @@ func (r CourseRepositoryImplementation) GetApplicationDetail(ApplicationId int) 
 		&application.CourseID,
 		&application.CreatedDate,
 		&application.StatusCode,
+		&application.PhoneNumber,
 	)
 	if err != nil {
 		return nil, err
@@ -731,7 +742,11 @@ func (r CourseRepositoryImplementation) GetApplicationByProfessorId(professorId 
 					c.course_name,
 					ta.grade,
 					stu.firstname,
-					stu.lastname
+					stu.lastname,
+					stu.phone_number,
+					CASE WHEN ta.transcript_ID IS NOT NULL THEN true ELSE false END as has_transcript,
+					CASE WHEN ta.bank_account_ID IS NOT NULL THEN true ELSE false END as has_bank_account,
+					CASE WHEN ta.student_card_ID IS NOT NULL THEN true ELSE false END as has_student_card
 				FROM ta_application AS ta 
 				LEFT JOIN status AS st
 					ON ta.status_ID = st.status_ID
@@ -766,6 +781,10 @@ func (r CourseRepositoryImplementation) GetApplicationByProfessorId(professorId 
 			&application.Grade,
 			&firstname,
 			&lastname,
+			&application.PhoneNumber,
+			&application.HasTranscript,
+			&application.HasBankAccount,
+			&application.HasStudentCard,
 		)
 		if err != nil {
 			return nil, err
