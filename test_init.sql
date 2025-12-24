@@ -75,8 +75,8 @@ CREATE TABLE student_card_storage(
 
 --verified
 CREATE TABLE courses(
-    id SERIAL PRIMARY KEY,
-    course_ID VARCHAR(20) NOT NULL,
+    course_ID SERIAL PRIMARY KEY,
+    course_code VARCHAR(20) NOT NULL,
     course_name VARCHAR(150) NOT NULL,
     professor_ID INTEGER NOT NULL,
     course_program_ID INTEGER NOT NULL,
@@ -89,8 +89,6 @@ CREATE TABLE courses(
     class_start TIME NOT NULL,
     class_end TIME NOT NULL,
     work_hour INTEGER,
-    ta_allocation INTEGER,
-    location  VARCHAR(20),
     created_date TIMESTAMP ,
     deleted_date TIMESTAMP,
     CONSTRAINT FK_professor_ID
@@ -113,6 +111,7 @@ CREATE TABLE ta_job_posting(
     professor_ID INTEGER NOT NULL,
     task VARCHAR(200) NOT NULL,
     ta_allocation INTEGER NOT NULL,
+    location  VARCHAR(20) NOT NULL,
     status_ID INTEGER NOT NULL,
     course_ID INTEGER ,
     grade_ID INTEGER NOT NULL,
@@ -126,7 +125,7 @@ CREATE TABLE ta_job_posting(
         REFERENCES professors(professor_ID),
     CONSTRAINT FK_course_ID
         FOREIGN KEY (course_ID)
-        REFERENCES courses(id),
+        REFERENCES courses(course_ID),
     CONSTRAINT FK_grade_ID
         FOREIGN KEY (grade_ID)
         REFERENCES grades(grade_ID)
@@ -174,7 +173,7 @@ CREATE TABLE ta_courses(
         REFERENCES students(student_ID),
     CONSTRAINT FK_course_ID
         FOREIGN KEY (course_ID)
-        REFERENCES courses(id)
+        REFERENCES courses(course_ID)
 );
 
 

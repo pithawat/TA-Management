@@ -77,6 +77,37 @@ func (s CourseServiceImplementation) DeleteCourse(id int) (response.GeneralRespo
 	return response.GeneralResponse{Message: "Delete Successful"}, err
 }
 
+func (s CourseServiceImplementation) CreateJobPost(body request.CreateJobPost) (response.CreateResponse, error) {
+	id, err := s.repo.CreateJobPost(body)
+	if err != nil {
+		fmt.Println(err)
+		return response.CreateResponse{
+			Message: "Create Job Post Failed!",
+		}, err
+	}
+	return response.CreateResponse{
+		Message: "Create Job Post Successfully",
+		Id:      id,
+	}, nil
+}
+
+func (s CourseServiceImplementation) UpdateJobPost(body request.UpdateJobPost) (response.GeneralResponse, error) {
+	err := s.repo.UpdateJobPost(body)
+	if err != nil {
+		return response.GeneralResponse{Message: "Update Job Post Failed!"}, err
+	}
+	return response.GeneralResponse{Message: "Update Job Post Successful"}, err
+}
+
+func (s CourseServiceImplementation) DeleteJobPost(jobPostId int) (response.GeneralResponse, error) {
+	err := s.repo.DeleteJobPost(jobPostId)
+	if err != nil {
+		fmt.Println(err)
+		return response.GeneralResponse{Message: "Delete Job Post Failed!"}, err
+	}
+	return response.GeneralResponse{Message: "Delete Job Post Successful"}, err
+}
+
 func (s CourseServiceImplementation) ApplyJobPost(body request.ApplyJobPost) (*response.CreateResponse, error) {
 	id, err := s.repo.ApplyJobPost(body)
 	if err != nil {

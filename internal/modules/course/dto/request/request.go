@@ -20,7 +20,7 @@ import "time"
 
 type CreateCourse struct {
 	CourseName      string    `json:"courseName"`
-	CourseID        string    `json:"courseID"`
+	CourseCode      string    `json:"courseCode"`
 	ProfessorID     int       `json:"professorID"`
 	CourseProgramID int       `json:"courseProgramID"`
 	CourseProgram   string    `json:"courseProgram"`
@@ -31,17 +31,33 @@ type CreateCourse struct {
 	Classday        string    `json:"classday"`
 	ClassStart      string    `json:"classStart"`
 	ClassEnd        string    `json:"classEnd"`
-	TaAllocation    int       `json:"taAllocation"`
-	GradeID         int       `json:"gradeID"`
-	Task            string    `json:"task"`
 	WorkHour        int       `json:"workHour"`
-	Location        string    `json:"location"`
 	CreatedDate     time.Time `json:"-"`
+}
+
+type CreateJobPost struct {
+	CourseID     int       `json:"courseID"`
+	ProfessorID  int       `json:"professorID"`
+	Location     string    `json:"location"`
+	TaAllocation int       `json:"taAllocation"`
+	GradeID      int       `json:"gradeID"`
+	Task         string    `json:"task"`
+	CreatedDate  time.Time `json:"-"`
+}
+
+type UpdateJobPost struct {
+	Id           int     `json:"id"`
+	CourseID     *string `json:"courseID"`
+	ProfessorID  *int    `json:"professorID"`
+	Location     *string `json:"location"`
+	TaAllocation *int    `json:"taAllocation"`
+	GradeID      *int    `json:"gradeID"`
+	Task         *string `json:"task"`
 }
 
 type UpdateCourse struct {
 	CourseName      *string    `json:"courseName"`
-	CourseID        *string    `json:"courseID"`
+	CourseCode      *string    `json:"courseCode"`
 	ProfessorID     *int       `json:"professorID"`
 	CourseProgramID *int       `json:"courseProgramID"`
 	CourseProgram   *string    `json:"courseProgram"`

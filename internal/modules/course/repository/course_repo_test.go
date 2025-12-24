@@ -40,7 +40,7 @@ func TestRepo_CreateCourse_Success(t *testing.T) {
 
 	inputBody := request.CreateCourse{
 		CourseName:      "program fundamental 1",
-		CourseID:        "01076103",
+		CourseCode:      "01076103",
 		ProfessorID:     1,
 		CourseProgramID: 1,
 		CourseProgram:   "General",
@@ -75,7 +75,7 @@ func TestRepo_CreateCourse_FailsOnDuplicate(t *testing.T) {
 	repo := repository.NewCourseRepository(testDB)
 	inputBody := request.CreateCourse{
 		CourseName:      "program fundamental 1",
-		CourseID:        "01076103",
+		CourseCode:      "01076103",
 		ProfessorID:     1,
 		CourseProgramID: 1,
 		CourseProgram:   "General",

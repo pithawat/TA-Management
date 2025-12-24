@@ -75,7 +75,7 @@ func TestService_CreateCourse_Integration(t *testing.T) {
 	// Define the common request body
 	baseBody := request.CreateCourse{
 		CourseName:      "Advanced Go Programming",
-		CourseID:        "01076203",
+		CourseCode:      "01076203",
 		ProfessorID:     1,
 		CourseProgramID: 1,
 		CourseProgram:   "General",
@@ -139,10 +139,10 @@ func TestService_CreateCourse_Integration(t *testing.T) {
 				var courseID string
 				var profID int
 
-				queryErr := testDB.QueryRow("SELECT course_ID, professor_ID FROM courses WHERE course_ID = $1", tt.body.CourseID).Scan(&courseID, &profID)
+				queryErr := testDB.QueryRow("SELECT course_ID, professor_ID FROM courses WHERE course_ID = $1", tt.body.CourseCode).Scan(&courseID, &profID)
 
 				assert.Nil(t, queryErr, "Failed to query row after successful creation")
-				assert.Equal(t, tt.body.CourseID, courseID)
+				assert.Equal(t, tt.body.CourseCode, courseID)
 				assert.Equal(t, tt.body.ProfessorID, profID)
 			}
 		})
@@ -160,7 +160,7 @@ func TestService_UpdateCourse_Integration(t *testing.T) {
 
 	baseBody := request.CreateCourse{
 		CourseName:      "Advanced Go Programming",
-		CourseID:        "01076203",
+		CourseCode:      "01076203",
 		ProfessorID:     1,
 		CourseProgramID: 1,
 		CourseProgram:   "General",
@@ -181,10 +181,10 @@ func TestService_UpdateCourse_Integration(t *testing.T) {
 	}
 
 	newCorseName := "programing fundamental"
-	newCourseId := "1123456"
+	newCourseCode := "1123456"
 	updateBody := request.UpdateCourse{
 		CourseName: &newCorseName,
-		CourseID:   &newCourseId,
+		CourseCode: &newCourseCode,
 		Id:         createResult.Id,
 	}
 
@@ -206,8 +206,8 @@ func TestService_UpdateCourse_Integration(t *testing.T) {
 	if updatedName != newCorseName {
 		t.Errorf("Course mismatch. Want: %s ,got: %s", newCorseName, updatedName)
 	}
-	if updatedId != newCourseId {
-		t.Errorf("CourseId mismatch. Want:%s ,got: %s", newCourseId, updatedId)
+	if updatedId != newCourseCode {
+		t.Errorf("CourseCode mismatch. Want:%s ,got: %s", newCourseCode, updatedId)
 	}
 
 }
@@ -222,7 +222,7 @@ func TestService_DeleteCourse_Integration(t *testing.T) {
 
 	baseBody := request.CreateCourse{
 		CourseName:      "Advanced Go Programming",
-		CourseID:        "01076203",
+		CourseCode:      "01076203",
 		ProfessorID:     1,
 		CourseProgramID: 1,
 		CourseProgram:   "General",
@@ -269,7 +269,7 @@ func TestService_ApplyCourse_Integration(t *testing.T) {
 
 	baseBody := request.CreateCourse{
 		CourseName:      "Advanced Go Programming",
-		CourseID:        "01076203",
+		CourseCode:      "01076203",
 		ProfessorID:     1,
 		CourseProgramID: 1,
 		CourseProgram:   "General",
@@ -324,7 +324,7 @@ func TestService_GetApplicationByStudentId_Integration(t *testing.T) {
 
 	baseBody := request.CreateCourse{
 		CourseName:      "Advanced Go Programming",
-		CourseID:        "01076203",
+		CourseCode:      "01076203",
 		ProfessorID:     1,
 		CourseProgramID: 1,
 		CourseProgram:   "General",
@@ -389,7 +389,7 @@ func TestService_GetApplicationByCourseId_Integration(t *testing.T) {
 
 	baseBody := request.CreateCourse{
 		CourseName:      "Advanced Go Programming",
-		CourseID:        "01076203",
+		CourseCode:      "01076203",
 		ProfessorID:     1,
 		CourseProgramID: 1,
 		CourseProgram:   "General",
@@ -453,7 +453,7 @@ func TestService_GetApplicationDetail_Integration(t *testing.T) {
 
 	baseBody := request.CreateCourse{
 		CourseName:      "Advanced Go Programming",
-		CourseID:        "01076203",
+		CourseCode:      "01076203",
 		ProfessorID:     1,
 		CourseProgramID: 1,
 		CourseProgram:   "General",
