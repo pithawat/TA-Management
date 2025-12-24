@@ -109,3 +109,26 @@ func (r LookupRepositoryImplementation) GetGrade() (*[]response.LookupResponse, 
 	}
 	return &grades, nil
 }
+
+func (r LookupRepositoryImplementation) GetProfessors() (*[]response.LookupResponse, error) {
+	query := `SELECT 
+				professor_ID, 
+				CONCAT(firstname, ' ', lastname) as fullname 
+			FROM professors`
+
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+
+	var professors []response.LookupResponse
+	for rows.Next() {
+		var professor response.LookupResponse
+		err := rows.Scan(&professor.Id, &professor.Value)
+		if err != nil {
+			return nil, err
+		}
+		professors = append(professors, professor)
+	}
+	return &professors, nil
+}

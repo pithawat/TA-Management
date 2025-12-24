@@ -46,3 +46,12 @@ func (s LookupServiceImplementation) GetGrade() (*[]response.LookupResponse, err
 	}
 	return result, nil
 }
+
+func (s LookupServiceImplementation) GetProfessors() (*[]response.LookupResponse, error) {
+	result, err := s.repo.GetProfessors()
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return result, nil
+}

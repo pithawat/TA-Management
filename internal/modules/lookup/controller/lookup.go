@@ -25,6 +25,7 @@ func InitializeController(lookupService service.LookupService, r *gin.RouterGrou
 		r.GET("/classday", c.getClassday)
 		r.GET("/semester", c.getSemester)
 		r.GET("/grade", c.getGrade)
+		r.GET("/professors", c.getProfessors)
 	}
 }
 
@@ -58,6 +59,15 @@ func (controller LookupController) getSemester(ctx *gin.Context) {
 
 func (controller LookupController) getGrade(ctx *gin.Context) {
 	result, err := controller.service.GetGrade()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "something went wrong"})
+		return
+	}
+	ctx.JSON(http.StatusOK, result)
+}
+
+func (controller LookupController) getProfessors(ctx *gin.Context) {
+	result, err := controller.service.GetProfessors()
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "something went wrong"})
 		return
