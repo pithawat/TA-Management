@@ -16,9 +16,9 @@ func NewCourseService(repo repository.CourseRepository) CourseServiceImplementat
 	return CourseServiceImplementation{repo: repo}
 }
 
-func (s CourseServiceImplementation) GetAllCourse() (*response.RequestDataResponse, error) {
+func (s CourseServiceImplementation) GetAllJobPost() (*response.RequestDataResponse, error) {
 
-	courses, err := s.repo.GetAllCourse()
+	courses, err := s.repo.GetAllJobPost()
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
@@ -31,8 +31,8 @@ func (s CourseServiceImplementation) GetAllCourse() (*response.RequestDataRespon
 	return &response, nil
 }
 
-func (s CourseServiceImplementation) GetAllCourseByStudentId(studentId int) (*response.RequestDataResponse, error) {
-	courses, err := s.repo.GetAllCourseByStudentId(studentId)
+func (s CourseServiceImplementation) GetAllJobPostByStudentId(studentId int) (*response.RequestDataResponse, error) {
+	courses, err := s.repo.GetAllJobPostByStudentId(studentId)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

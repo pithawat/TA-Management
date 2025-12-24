@@ -24,15 +24,15 @@ func InitializeController(courseService service.CourseService, r *gin.RouterGrou
 	c := NewCourseController(courseService)
 	r.Use()
 	{
-		r.GET("", c.findAllCourse)
-		r.GET("/student/:studentId", c.GetAllCourseByStudentId)
-		r.GET("/professor/:professorId", c.findProfessorCourse)
 
 		r.POST("", c.createCourse)
+		r.GET("/professor/:professorId", c.getProfessorCourse)
 		r.PATCH("/:courseId", c.updateCourse)
 		r.DELETE("/:courseId", c.deleteCourse)
 
 		r.POST("/jobpost", c.createJobPost)
+		r.GET("", c.findAllJobPost)
+		r.GET("/student/:studentId", c.GetAllJobPostByStudentId)
 		r.PATCH("/jobpost/:jobpostId", c.updateJobPost)
 		r.DELETE("/jobpost/:jobpostId", c.deleteJobPost)
 
@@ -48,9 +48,9 @@ func InitializeController(courseService service.CourseService, r *gin.RouterGrou
 	}
 }
 
-func (controller CourseController) findAllCourse(ctx *gin.Context) {
+func (controller CourseController) findAllJobPost(ctx *gin.Context) {
 	//validate
-	result, err := controller.service.GetAllCourse()
+	result, err := controller.service.GetAllJobPost()
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong"})
 		return
@@ -58,7 +58,7 @@ func (controller CourseController) findAllCourse(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, result)
 }
 
-func (controller CourseController) GetAllCourseByStudentId(ctx *gin.Context) {
+func (controller CourseController) GetAllJobPostByStudentId(ctx *gin.Context) {
 
 	studentId, ok := utils.ValidateParam(ctx, "studentId")
 	if !ok {
@@ -66,7 +66,7 @@ func (controller CourseController) GetAllCourseByStudentId(ctx *gin.Context) {
 		return
 	}
 
-	result, err := controller.service.GetAllCourseByStudentId(studentId)
+	result, err := controller.service.GetAllJobPostByStudentId(studentId)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong"})
 	}
@@ -74,7 +74,7 @@ func (controller CourseController) GetAllCourseByStudentId(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, result)
 }
 
-func (controller CourseController) findProfessorCourse(ctx *gin.Context) {
+func (controller CourseController) getProfessorCourse(ctx *gin.Context) {
 
 	//validate
 	professorId, ok := utils.ValidateParam(ctx, "professorId")

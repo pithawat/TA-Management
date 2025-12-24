@@ -18,18 +18,18 @@ func NewCourseRepository(DB *sql.DB) CourseRepositoryImplementation {
 	return CourseRepositoryImplementation{db: DB}
 }
 
-func (r CourseRepositoryImplementation) GetAllCourse() ([]response.Course, error) {
+func (r CourseRepositoryImplementation) GetAllJobPost() ([]response.JobPost, error) {
 
 	query := `SELECT 
 				j.task,
 				j.id,
 				c.course_code, 
 				c.course_name, 
-				c.ta_allocation, 
+				j.ta_allocation, 
 				c.work_hour,
 				c.class_start,
 				c.class_end,
-				c.location,
+				j.location,
 				c.course_program,
 				cd.class_day_value, 
 				p.firstname,
@@ -39,7 +39,7 @@ func (r CourseRepositoryImplementation) GetAllCourse() ([]response.Course, error
 				g.grade_value
 			FROM ta_job_posting AS j
 			LEFT JOIN courses AS c
-				ON j.course_ID = c.coruse_ID
+				ON j.course_ID = c.course_ID
 			LEFT JOIN class_days AS cd
 				ON c.class_day_ID = cd.class_day_ID 
 			LEFT JOIN professors AS p
@@ -58,9 +58,9 @@ func (r CourseRepositoryImplementation) GetAllCourse() ([]response.Course, error
 	//garantees that connection is released back to the pool ,prevent leak
 	defer rows.Close()
 
-	var courses []response.Course
+	var courses []response.JobPost
 	for rows.Next() {
-		var course response.Course
+		var course response.JobPost
 		var firstname string
 		var lastname string
 		err := rows.Scan(
@@ -91,18 +91,18 @@ func (r CourseRepositoryImplementation) GetAllCourse() ([]response.Course, error
 	return courses, nil
 }
 
-func (r CourseRepositoryImplementation) GetAllCourseByStudentId(studentId int) ([]response.Course, error) {
+func (r CourseRepositoryImplementation) GetAllJobPostByStudentId(studentId int) ([]response.JobPost, error) {
 
 	query := `SELECT 
 				j.task,
 				j.id,
 				c.course_code, 
 				c.course_name, 
-				c.ta_allocation, 
+				j.ta_allocation, 
 				c.work_hour,
 				c.class_start,
 				c.class_end,
-				c.location,
+				j.location,
 				c.course_program,
 				cd.class_day_value, 
 				p.firstname,
@@ -137,9 +137,9 @@ func (r CourseRepositoryImplementation) GetAllCourseByStudentId(studentId int) (
 	//garantees that connection is released back to the pool ,prevent leak
 	defer rows.Close()
 
-	var courses []response.Course
+	var courses []response.JobPost
 	for rows.Next() {
-		var course response.Course
+		var course response.JobPost
 		var firstname string
 		var lastname string
 		err := rows.Scan(
@@ -172,12 +172,21 @@ func (r CourseRepositoryImplementation) GetAllCourseByStudentId(studentId int) (
 
 func (r CourseRepositoryImplementation) GetProfessorCourse(professorId int) ([]response.Course, error) {
 
-	query := `SELECT course_ID, 
-				course_name, 
-				ta_allocation, 
+	query := `SELECT 
+				course_ID,
+				course_code, 
+				course_name,
+				course_program,
+				class_day,
+				class_start,
+				class_end,
+				semester,
+				p.professor_name,
 				work_hour 
 			FROM courses
-				WHERE professor_ID=$1`
+			join professors p 
+				on courses.professor_ID = p.professor_ID
+			WHERE professor_ID=$1`
 
 	rows, err := r.db.Query(query, professorId)
 	if err != nil {
@@ -190,7 +199,17 @@ func (r CourseRepositoryImplementation) GetProfessorCourse(professorId int) ([]r
 	for rows.Next() {
 		var course response.Course
 
-		err := rows.Scan(&course.CourseCode, &course.CourseName, &course.TaAllocation, &course.WorkHour)
+		err := rows.Scan(
+			&course.CourseID,
+			&course.CourseCode,
+			&course.CourseName,
+			&course.CourseProgram,
+			&course.Classday,
+			&course.ClassStart,
+			&course.ClassEnd,
+			&course.Semester,
+			&course.ProfessorName,
+			&course.WorkHour)
 		if err != nil {
 			return nil, err
 		}
@@ -566,7 +585,7 @@ func (r CourseRepositoryImplementation) GetApplicationByStudentId(studentId int)
 				LEFT JOIN ta_job_posting AS tp
 					ON ta.job_post_ID = tp.id
 				LEFT JOIN courses AS c
-					ON tp.course_ID = c.id
+					ON tp.course_ID = c.course_ID
 				LEFT JOIN status AS st
 					ON ta.status_ID = st.status_ID
 				WHERE student_ID = $1`
@@ -806,7 +825,7 @@ func (r CourseRepositoryImplementation) GetApplicationByProfessorId(professorId 
 				LEFT JOIN ta_job_posting AS jp
 					ON ta.job_post_ID = jp.id
 				LEFT JOIN courses AS c
-					ON jp.course_ID = c.id
+					ON jp.course_ID = c.course_ID
 				LEFT JOIN students AS stu
 					ON ta.student_id = stu.student_id
 				WHERE c.professor_ID = $1`

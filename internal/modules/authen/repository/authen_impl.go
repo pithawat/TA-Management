@@ -35,7 +35,7 @@ func (r AuthenRepositoryImplementation) CheckUserRole(name string) (string, erro
 
 	var isAccount bool
 	query = "SELECT EXISTS(SELECT 1 FROM accountants WHERE firstname = $1 AND lastname = $2)"
-	err = r.db.QueryRow(query, firstname, lastname).Scan(&isProf)
+	err = r.db.QueryRow(query, firstname, lastname).Scan(&isAccount)
 	if err != nil {
 		return "", err
 	}
@@ -83,7 +83,7 @@ func (r AuthenRepositoryImplementation) GetUserIDByName(name string, role string
 		table = "professors"
 		columName = "professor_ID"
 	case "FINANCE":
-		table = "accounts"
+		table = "accountants"
 		columName = "id"
 	default:
 		return "", fmt.Errorf("unsupported role for name lookup: %s", role)

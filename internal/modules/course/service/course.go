@@ -7,8 +7,8 @@ import (
 )
 
 type CourseService interface {
-	GetAllCourse() (*response.RequestDataResponse, error)
-	GetAllCourseByStudentId(studentId int) (*response.RequestDataResponse, error)
+	GetAllJobPost() (*response.RequestDataResponse, error)
+	GetAllJobPostByStudentId(studentId int) (*response.RequestDataResponse, error)
 	CreateCourse(body request.CreateCourse) (response.CreateResponse, error)
 	UpdateCourse(body request.UpdateCourse) (response.GeneralResponse, error)
 	DeleteCourse(courseId int) (response.GeneralResponse, error)

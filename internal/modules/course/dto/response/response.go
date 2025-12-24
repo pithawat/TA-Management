@@ -3,6 +3,20 @@ package response
 import "time"
 
 type Course struct {
+	CourseID      int    `json:"courseID"`
+	CourseCode    string `json:"courseCode"`
+	CourseName    string `json:"courseName"`
+	CourseProgram string `json:"courseProgram"`
+	WorkHour      int    `json:"workHour"`
+	ClassStart    string `json:"classStart"`
+	ClassEnd      string `json:"classEnd"`
+	Classday      string `json:"classday"`
+	ProfessorName string `json:"professorName"`
+	Semester      string `json:"semester"`
+	Status        string `json:"status"`
+}
+
+type JobPost struct {
 	CourseCode    string `json:"courseCode"`
 	CourseName    string `json:"courseName"`
 	CourseProgram string `json:"courseProgram"`
