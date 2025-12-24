@@ -31,7 +31,8 @@ func InitializeController(courseService service.CourseService, r *gin.RouterGrou
 		r.DELETE("/:courseId", c.deleteCourse)
 
 		r.POST("/jobpost", c.createJobPost)
-		r.GET("", c.findAllJobPost)
+		r.GET("/jobpost", c.findAllJobPost)
+		r.GET("", c.getAllCourse)
 		r.GET("/student/:studentId", c.GetAllJobPostByStudentId)
 		r.PATCH("/jobpost/:jobpostId", c.updateJobPost)
 		r.DELETE("/jobpost/:jobpostId", c.deleteJobPost)
@@ -71,6 +72,15 @@ func (controller CourseController) GetAllJobPostByStudentId(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong"})
 	}
 
+	ctx.JSON(http.StatusOK, result)
+}
+
+func (controller CourseController) getAllCourse(ctx *gin.Context) {
+	result, err := controller.service.GetAllCourse()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong"})
+		return
+	}
 	ctx.JSON(http.StatusOK, result)
 }
 

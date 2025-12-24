@@ -45,6 +45,20 @@ func (s CourseServiceImplementation) GetAllJobPostByStudentId(studentId int) (*r
 	return &response, nil
 }
 
+func (s CourseServiceImplementation) GetAllCourse() (*response.RequestDataResponse, error) {
+	courses, err := s.repo.GetAllCourse()
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	response := response.RequestDataResponse{
+		Data:    courses,
+		Message: "Success",
+	}
+
+	return &response, nil
+}
+
 func (s CourseServiceImplementation) CreateCourse(body request.CreateCourse) (response.CreateResponse, error) {
 	id, err := s.repo.CreateCourse(body)
 	if err != nil {
@@ -196,6 +210,7 @@ func (s CourseServiceImplementation) ApproveApplication(applicationId int) (*res
 func (s CourseServiceImplementation) GetProfessorCourse(professorId int) (*response.RequestDataResponse, error) {
 	courses, err := s.repo.GetProfessorCourse(professorId)
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 	response := response.RequestDataResponse{

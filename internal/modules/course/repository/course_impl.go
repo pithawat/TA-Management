@@ -170,23 +170,80 @@ func (r CourseRepositoryImplementation) GetAllJobPostByStudentId(studentId int) 
 	return courses, nil
 }
 
+func (r CourseRepositoryImplementation) GetAllCourse() ([]response.Course, error) {
+
+	query := `SELECT 
+				c.course_ID, 
+				c.course_code, 
+				c.course_name, 
+				c.course_program,
+				c.class_day,
+				c.class_start,
+				c.class_end,
+				c.semester,
+				c.sec,
+				p.firstname,
+				p.lastname,
+				c.work_hour
+			FROM courses AS c
+			LEFT JOIN professors AS p
+				ON c.professor_ID = p.professor_ID
+			WHERE c.deleted_date IS NULL`
+
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var courses []response.Course
+	for rows.Next() {
+		var course response.Course
+		var firstname string
+		var lastname string
+		err := rows.Scan(
+			&course.CourseID,
+			&course.CourseCode,
+			&course.CourseName,
+			&course.CourseProgram,
+			&course.Classday,
+			&course.ClassStart,
+			&course.ClassEnd,
+			&course.Semester,
+			&course.Section,
+			&firstname,
+			&lastname,
+			&course.WorkHour,
+		)
+		if err != nil {
+			return nil, err
+		}
+		course.ProfessorName = firstname + " " + lastname
+		courses = append(courses, course)
+	}
+
+	return courses, nil
+}
+
 func (r CourseRepositoryImplementation) GetProfessorCourse(professorId int) ([]response.Course, error) {
 
 	query := `SELECT 
-				course_ID,
-				course_code, 
-				course_name,
-				course_program,
-				class_day,
-				class_start,
-				class_end,
-				semester,
-				p.professor_name,
-				work_hour 
-			FROM courses
-			join professors p 
-				on courses.professor_ID = p.professor_ID
-			WHERE professor_ID=$1`
+				c.course_ID,
+				c.course_code, 
+				c.course_name,
+				c.course_program,
+				c.class_day,
+				c.class_start,
+				c.class_end,
+				c.semester,
+				c.sec,
+				p.firstname,
+				p.lastname,
+				c.work_hour 
+			FROM courses AS c
+			join professors AS p 
+				on c.professor_ID = p.professor_ID
+			WHERE c.professor_ID=$1`
 
 	rows, err := r.db.Query(query, professorId)
 	if err != nil {
@@ -198,7 +255,8 @@ func (r CourseRepositoryImplementation) GetProfessorCourse(professorId int) ([]r
 	var courses []response.Course
 	for rows.Next() {
 		var course response.Course
-
+		var firstname string
+		var lastname string
 		err := rows.Scan(
 			&course.CourseID,
 			&course.CourseCode,
@@ -208,11 +266,14 @@ func (r CourseRepositoryImplementation) GetProfessorCourse(professorId int) ([]r
 			&course.ClassStart,
 			&course.ClassEnd,
 			&course.Semester,
-			&course.ProfessorName,
+			&course.Section,
+			&firstname,
+			&lastname,
 			&course.WorkHour)
 		if err != nil {
 			return nil, err
 		}
+		course.ProfessorName = firstname + " " + lastname
 		courses = append(courses, course)
 	}
 
