@@ -49,6 +49,11 @@ func InitializeController(courseService service.CourseService, r *gin.RouterGrou
 	}
 }
 
+func InitializePublicController(courseService service.CourseService, r *gin.RouterGroup) {
+	c := NewCourseController(courseService)
+	r.GET("/jobpost", c.findAllJobPost)
+}
+
 func (controller CourseController) findAllJobPost(ctx *gin.Context) {
 	//validate
 	result, err := controller.service.GetAllJobPost()

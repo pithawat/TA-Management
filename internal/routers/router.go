@@ -97,6 +97,12 @@ func InitRouter() *gin.Engine {
 		authencontroller.InitializeController(authService, googleOAuthConfig, authRouter)
 	}
 
+	publicRouter := baseRouter.Group("/public")
+	{
+		courseRouter := publicRouter.Group("/course")
+		coursecontroller.InitializePublicController(courseService, courseRouter)
+	}
+
 	//authenticated routes Group
 	authenticatedRouter := baseRouter.Group("")
 	authenticatedRouter.Use(middleware.AuthMiddleware(jwtSecret))
