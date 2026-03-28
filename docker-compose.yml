@@ -40,6 +40,18 @@ services:
   #   depends_on:
   #     - db
 
+  #   depends_on:
+  #     - db
+
+  redis:
+    image: redis:alpine
+    container_name: ta_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
   # app_test:
   #   build:
   #     context: . # Build from the Dockerfile in the current directory
@@ -58,3 +70,4 @@ services:
   #   command: go test ./repository -v -coverprofile=coverage.out
 volumes:
   db_data:
+  redis_data:

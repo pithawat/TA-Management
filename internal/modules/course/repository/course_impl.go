@@ -1,10 +1,10 @@
 package repository
 
 import (
+	"TA-management/internal/constants"
 	"TA-management/internal/modules/course/dto/request"
 	"TA-management/internal/modules/course/dto/response"
 	"database/sql"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -26,22 +26,29 @@ func (r CourseRepositoryImplementation) GetAllJobPost() ([]response.JobPost, err
 				c.course_code, 
 				c.course_name, 
 				j.ta_allocation, 
+				GREATEST(j.ta_allocation - (
+					SELECT COUNT(*) FROM ta_application ta
+					WHERE ta.job_post_ID = j.id AND ta.status_ID = 5
+				), 0) AS remaining_positions,
 				c.work_hour,
 				c.class_start,
 				c.class_end,
 				j.location,
-				c.course_program,
-				cd.class_day_value, 
-				p.firstname,
-				p.lastname,
+				cp.course_program_value_thai,
+				cd.class_day_value_thai, 
+				CONCAT(p.prefix, ' ', p.firstname_thai, ' ', p.lastname_thai) as fullname,
 				s.semester_value,
 				st.status_value,
-				g.grade_value
+				g.grade_value,
+				j.course_ID,
+				c.sec
 			FROM ta_job_posting AS j
 			LEFT JOIN courses AS c
 				ON j.course_ID = c.course_ID
 			LEFT JOIN class_days AS cd
 				ON c.class_day_ID = cd.class_day_ID 
+			LEFT JOIN course_programs AS cp
+				ON c.course_program_ID = cp.course_program_ID
 			LEFT JOIN professors AS p
 				ON c.professor_ID = p.professor_ID
 			LEFT JOIN semester AS s
@@ -49,7 +56,88 @@ func (r CourseRepositoryImplementation) GetAllJobPost() ([]response.JobPost, err
 			LEFT JOIN status AS st
 				ON j.status_ID = st.status_ID
 			LEFT JOIN grades AS g
-				ON j.grade_ID = g.grade_ID`
+				ON j.grade_ID = g.grade_ID
+			WHERE j.status_ID = $1
+			AND CURRENT_DATE BETWEEN s.start_date AND s.end_date`
+
+	rows, err := r.db.Query(query, constants.OpenStatusID)
+	if err != nil {
+		return nil, err
+	}
+	//garantees that connection is released back to the pool ,prevent leak
+	defer rows.Close()
+
+	var courses []response.JobPost
+	for rows.Next() {
+		var course response.JobPost
+		var fullname string
+		err := rows.Scan(
+			&course.Task,
+			&course.JobPostID,
+			&course.CourseCode,
+			&course.CourseName,
+			&course.TaAllocation,
+			&course.RemainingPositions,
+			&course.WorkHour,
+			&course.ClassStart,
+			&course.ClassEnd,
+			&course.Location,
+			&course.CourseProgram,
+			&course.Classday,
+			&fullname,
+			&course.Semester,
+			&course.Status,
+			&course.Grade,
+			&course.CourseID,
+			&course.Section,
+		)
+		if err != nil {
+			return nil, err
+		}
+		course.ProfessorName = fullname
+		courses = append(courses, course)
+	}
+
+	return courses, nil
+}
+
+func (r CourseRepositoryImplementation) GetAllJobPostAllStatus() ([]response.JobPost, error) {
+
+	query := `SELECT 
+				j.task,
+				j.id,
+				c.course_code, 
+				c.course_name, 
+				j.ta_allocation, 
+				c.work_hour,
+				c.class_start,
+				c.class_end,
+				j.location,
+				cp.course_program_value_thai,
+				cd.class_day_value_thai, 
+				CONCAT(p.prefix, ' ', p.firstname_thai, ' ', p.lastname_thai) as fullname,
+				s.semester_value,
+				st.status_value,
+				g.grade_value,
+				j.course_ID,
+				j.status_ID,
+				c.sec
+			FROM ta_job_posting AS j
+			LEFT JOIN courses AS c
+				ON j.course_ID = c.course_ID
+			LEFT JOIN class_days AS cd
+				ON c.class_day_ID = cd.class_day_ID 
+			LEFT JOIN course_programs AS cp
+				ON c.course_program_ID = cp.course_program_ID
+			LEFT JOIN professors AS p
+				ON c.professor_ID = p.professor_ID
+			LEFT JOIN semester AS s
+				ON c.semester_ID = s.semester_ID
+			LEFT JOIN status AS st
+				ON j.status_ID = st.status_ID
+			LEFT JOIN grades AS g
+				ON j.grade_ID = g.grade_ID
+			WHERE j.deleted_date IS NULL`
 
 	rows, err := r.db.Query(query)
 	if err != nil {
@@ -61,8 +149,7 @@ func (r CourseRepositoryImplementation) GetAllJobPost() ([]response.JobPost, err
 	var courses []response.JobPost
 	for rows.Next() {
 		var course response.JobPost
-		var firstname string
-		var lastname string
+		var fullname string
 		err := rows.Scan(
 			&course.Task,
 			&course.JobPostID,
@@ -75,16 +162,18 @@ func (r CourseRepositoryImplementation) GetAllJobPost() ([]response.JobPost, err
 			&course.Location,
 			&course.CourseProgram,
 			&course.Classday,
-			&firstname,
-			&lastname,
+			&fullname,
 			&course.Semester,
 			&course.Status,
 			&course.Grade,
+			&course.CourseID,
+			&course.StatusID,
+			&course.Section,
 		)
 		if err != nil {
 			return nil, err
 		}
-		course.ProfessorName = firstname + " " + lastname
+		course.ProfessorName = fullname
 		courses = append(courses, course)
 	}
 
@@ -99,22 +188,29 @@ func (r CourseRepositoryImplementation) GetAllJobPostByStudentId(studentId int) 
 				c.course_code, 
 				c.course_name, 
 				j.ta_allocation, 
+				GREATEST(j.ta_allocation - (
+					SELECT COUNT(*) FROM ta_application ta
+					WHERE ta.job_post_ID = j.id AND ta.status_ID = 5
+				), 0) AS remaining_positions,
 				c.work_hour,
 				c.class_start,
 				c.class_end,
 				j.location,
-				c.course_program,
-				cd.class_day_value, 
-				p.firstname,
-				p.lastname,
+				cp.course_program_value_thai,
+				cd.class_day_value_thai,
+				CONCAT(p.prefix, ' ', p.firstname_thai, ' ', p.lastname_thai) as fullname,
 				s.semester_value,
 				st.status_value,
-				g.grade_value
+				g.grade_value,
+				j.course_ID,
+				c.sec
 			FROM ta_job_posting AS j
 			LEFT JOIN courses AS c
 				ON j.course_ID = c.course_ID
 			LEFT JOIN class_days AS cd
 				ON c.class_day_ID = cd.class_day_ID 
+			LEFT JOIN course_programs AS cp
+				ON c.course_program_ID = cp.course_program_ID
 			LEFT JOIN professors AS p
 				ON c.professor_ID = p.professor_ID
 			LEFT JOIN semester AS s
@@ -127,10 +223,13 @@ func (r CourseRepositoryImplementation) GetAllJobPostByStudentId(studentId int) 
 				SELECT 1 
 				FROM ta_application as ta
 				WHERE ta.job_post_ID = j.id
-				AND ta.student_ID = $1)
+				AND ta.student_ID = $1
+				AND ta.status_ID != 4)
+			AND j.status_id = $2
+			AND CURRENT_DATE BETWEEN s.start_date AND s.end_date
 			`
 
-	rows, err := r.db.Query(query, studentId)
+	rows, err := r.db.Query(query, studentId, constants.OpenStatusID)
 	if err != nil {
 		return nil, err
 	}
@@ -140,30 +239,31 @@ func (r CourseRepositoryImplementation) GetAllJobPostByStudentId(studentId int) 
 	var courses []response.JobPost
 	for rows.Next() {
 		var course response.JobPost
-		var firstname string
-		var lastname string
+		var fullname string
 		err := rows.Scan(
 			&course.Task,
 			&course.JobPostID,
 			&course.CourseCode,
 			&course.CourseName,
 			&course.TaAllocation,
+			&course.RemainingPositions,
 			&course.WorkHour,
 			&course.ClassStart,
 			&course.ClassEnd,
 			&course.Location,
 			&course.CourseProgram,
 			&course.Classday,
-			&firstname,
-			&lastname,
+			&fullname,
 			&course.Semester,
 			&course.Status,
 			&course.Grade,
+			&course.CourseID,
+			&course.Section,
 		)
 		if err != nil {
 			return nil, err
 		}
-		course.ProfessorName = firstname + " " + lastname
+		course.ProfessorName = fullname
 		courses = append(courses, course)
 	}
 
@@ -176,18 +276,28 @@ func (r CourseRepositoryImplementation) GetAllCourse() ([]response.Course, error
 				c.course_ID, 
 				c.course_code, 
 				c.course_name, 
-				c.course_program,
-				c.class_day,
+				cp.course_program_value_thai,
+				cd.class_day_value_thai,
 				c.class_start,
 				c.class_end,
 				c.semester,
 				c.sec,
-				p.firstname,
-				p.lastname,
-				c.work_hour
+				CONCAT(p.prefix, ' ', p.firstname_thai, ' ', p.lastname_thai) as fullname,
+				c.work_hour,
+				s.start_date,
+				s.end_date,
+				dc.role_id
 			FROM courses AS c
+			LEFT JOIN discord_channels AS dc
+				ON c.course_ID = dc.course_ID
 			LEFT JOIN professors AS p
 				ON c.professor_ID = p.professor_ID
+			LEFT JOIN class_days AS cd
+				ON c.class_day_ID = cd.class_day_ID
+			LEFT JOIN course_programs AS cp
+				ON c.course_program_ID = cp.course_program_ID
+			LEFT JOIN semester AS s
+				ON c.semester_ID = s.semester_ID
 			WHERE c.deleted_date IS NULL`
 
 	rows, err := r.db.Query(query)
@@ -199,8 +309,8 @@ func (r CourseRepositoryImplementation) GetAllCourse() ([]response.Course, error
 	var courses []response.Course
 	for rows.Next() {
 		var course response.Course
-		var firstname string
-		var lastname string
+		var fullname string
+		var roleID sql.NullString
 		err := rows.Scan(
 			&course.CourseID,
 			&course.CourseCode,
@@ -211,14 +321,19 @@ func (r CourseRepositoryImplementation) GetAllCourse() ([]response.Course, error
 			&course.ClassEnd,
 			&course.Semester,
 			&course.Section,
-			&firstname,
-			&lastname,
+			&fullname,
 			&course.WorkHour,
+			&course.SemesterStart,
+			&course.SemesterEnd,
+			&roleID,
 		)
 		if err != nil {
 			return nil, err
 		}
-		course.ProfessorName = firstname + " " + lastname
+		if roleID.Valid {
+			course.DiscordRoleID = roleID.String
+		}
+		course.ProfessorName = fullname
 		courses = append(courses, course)
 	}
 
@@ -231,19 +346,31 @@ func (r CourseRepositoryImplementation) GetProfessorCourse(professorId int) ([]r
 				c.course_ID,
 				c.course_code, 
 				c.course_name,
-				c.course_program,
-				c.class_day,
+				cp.course_program_value_thai,
+				cd.class_day_value_thai,
 				c.class_start,
 				c.class_end,
 				c.semester,
 				c.sec,
-				p.firstname,
-				p.lastname,
-				c.work_hour 
+				CONCAT(p.prefix, ' ', p.firstname_thai, ' ', p.lastname_thai) as fullname,
+				c.work_hour,
+				s.start_date,
+				s.end_date,
+				dc.role_id
 			FROM courses AS c
+			LEFT JOIN discord_channels AS dc
+				ON c.course_ID = dc.course_ID
 			join professors AS p 
 				on c.professor_ID = p.professor_ID
-			WHERE c.professor_ID=$1`
+			LEFT JOIN class_days AS cd
+				ON c.class_day_ID = cd.class_day_ID
+			LEFT JOIN course_programs AS cp
+				ON c.course_program_ID = cp.course_program_ID
+			LEFT JOIN semester AS s
+				ON c.semester_ID = s.semester_ID
+			WHERE c.professor_ID=$1
+			AND c.deleted_date IS NULL
+			AND CURRENT_DATE BETWEEN s.start_date AND s.end_date`
 
 	rows, err := r.db.Query(query, professorId)
 	if err != nil {
@@ -255,8 +382,8 @@ func (r CourseRepositoryImplementation) GetProfessorCourse(professorId int) ([]r
 	var courses []response.Course
 	for rows.Next() {
 		var course response.Course
-		var firstname string
-		var lastname string
+		var fullname string
+		var roleID sql.NullString
 		err := rows.Scan(
 			&course.CourseID,
 			&course.CourseCode,
@@ -267,13 +394,18 @@ func (r CourseRepositoryImplementation) GetProfessorCourse(professorId int) ([]r
 			&course.ClassEnd,
 			&course.Semester,
 			&course.Section,
-			&firstname,
-			&lastname,
-			&course.WorkHour)
+			&fullname,
+			&course.WorkHour,
+			&course.SemesterStart,
+			&course.SemesterEnd,
+			&roleID)
 		if err != nil {
 			return nil, err
 		}
-		course.ProfessorName = firstname + " " + lastname
+		if roleID.Valid {
+			course.DiscordRoleID = roleID.String
+		}
+		course.ProfessorName = fullname
 		courses = append(courses, course)
 	}
 
@@ -281,36 +413,6 @@ func (r CourseRepositoryImplementation) GetProfessorCourse(professorId int) ([]r
 }
 
 func (r CourseRepositoryImplementation) CreateCourse(body request.CreateCourse) (int, error) {
-
-	queryCheck := `SELECT COUNT(*) FROM courses 
-					WHERE course_code=$1 
-					AND course_program_ID=$2 
-					AND sec=$3 
-					AND semester_ID=$4 
-					AND deleted_date IS NULL`
-
-	var count int
-
-	row := r.db.QueryRow(queryCheck,
-		body.CourseCode,
-		body.CourseProgramID,
-		body.Sec,
-		body.SemesterID,
-	)
-
-	err := row.Scan(&count)
-	if err != nil {
-		return 0, fmt.Errorf("failed to scan duplicate check result:%w", err)
-	}
-
-	if count > 0 {
-		return 0, errors.New("course already exists")
-	}
-
-	tx, err := r.db.Begin()
-	if err != nil {
-		return 0, err
-	}
 
 	query := `INSERT INTO courses(
 	course_code, 
@@ -332,7 +434,7 @@ func (r CourseRepositoryImplementation) CreateCourse(body request.CreateCourse) 
 
 	var lastInsertId int
 
-	err = tx.QueryRow(query,
+	err := r.db.QueryRow(query,
 		body.CourseCode,
 		body.CourseName,
 		body.ProfessorID,
@@ -350,17 +452,36 @@ func (r CourseRepositoryImplementation) CreateCourse(body request.CreateCourse) 
 	).Scan(&lastInsertId)
 
 	if err != nil {
-		tx.Rollback()
-		return 0, err
-	}
-
-	if err := tx.Commit(); err != nil {
-		tx.Rollback()
 		return 0, err
 	}
 
 	return lastInsertId, nil
 
+}
+
+func (r CourseRepositoryImplementation) IsCourseExist(body request.CreateCourse) (int, error) {
+	queryCheck := `SELECT COUNT(*) FROM courses 
+					WHERE course_code=$1 
+					AND course_program_ID=$2 
+					AND sec=$3 
+					AND semester_ID=$4 
+					AND deleted_date IS NULL`
+
+	var count int
+
+	row := r.db.QueryRow(queryCheck,
+		body.CourseCode,
+		body.CourseProgramID,
+		body.Sec,
+		body.SemesterID,
+	)
+
+	err := row.Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("failed to scan duplicate check result:%w", err)
+	}
+
+	return count, nil
 }
 
 func (r CourseRepositoryImplementation) UpdateCourse(body request.UpdateCourse) error {
@@ -423,7 +544,7 @@ func (r CourseRepositoryImplementation) UpdateCourse(body request.UpdateCourse) 
 
 	// 3. Finalize the query string
 	query = strings.TrimSuffix(query, ", ")
-	query += fmt.Sprintf(" WHERE id = $%d;", placeholderID)
+	query += fmt.Sprintf(" WHERE course_id = $%d;", placeholderID)
 	params = append(params, body.Id)
 
 	// 4. Execute
@@ -434,6 +555,32 @@ func (r CourseRepositoryImplementation) UpdateCourse(body request.UpdateCourse) 
 	}
 
 	return tx.Commit()
+}
+
+func (r CourseRepositoryImplementation) GetDiscordRoleByCourseId(courseId int) (string, error) {
+	query := `SELECT role_id FROM discord_channels WHERE course_ID = $1`
+	var roleId string
+	err := r.db.QueryRow(query, courseId).Scan(&roleId)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", nil
+		}
+		return "", err
+	}
+	return roleId, nil
+}
+
+func (r CourseRepositoryImplementation) UpdateCourseDiscord(courseId int, roleId string, channelId string, channelName string) error {
+	queryDelete := `DELETE FROM discord_channels WHERE course_ID = $1`
+	_, err := r.db.Exec(queryDelete, courseId)
+	if err != nil {
+		return err
+	}
+
+	queryInsert := `INSERT INTO discord_channels(course_ID, role_id, channel_id, channel_name)
+				VALUES($1, $2, $3, $4)`
+	_, err = r.db.Exec(queryInsert, courseId, roleId, channelId, channelName)
+	return err
 }
 
 func (r CourseRepositoryImplementation) DeleteCourse(id int) error {
@@ -493,9 +640,6 @@ func (r CourseRepositoryImplementation) UpdateJobPost(body request.UpdateJobPost
 		placeholderID++
 	}
 	// 1. Check each field
-	if body.CourseID != nil {
-		addField("course_ID", body.CourseID)
-	}
 	if body.ProfessorID != nil {
 		addField("professor_ID", body.ProfessorID)
 	}
@@ -536,71 +680,93 @@ func (r CourseRepositoryImplementation) DeleteJobPost(jobPostId int) error {
 	return nil
 }
 
-func (r CourseRepositoryImplementation) ApplyJobPost(body request.ApplyJobPost) (int, error) {
+func (r CourseRepositoryImplementation) GetJobPostByID(jobPostId int) (*response.JobPost, error) {
+	query := `SELECT 
+				j.task,
+				j.id,
+				c.course_code, 
+				c.course_name, 
+				j.ta_allocation, 
+				c.work_hour,
+				c.class_start,
+				c.class_end,
+				j.location,
+				cp.course_program_value_thai,
+				cd.class_day_value_thai, 
+				CONCAT(p.prefix, ' ', p.firstname_thai, ' ', p.lastname_thai) as fullname,
+				s.semester_value,
+				st.status_value,
+				g.grade_value,
+				j.course_ID,
+				j.status_ID,
+				c.sec
+			FROM ta_job_posting AS j
+			LEFT JOIN courses AS c
+				ON j.course_ID = c.course_ID
+			LEFT JOIN class_days AS cd
+				ON c.class_day_ID = cd.class_day_ID 
+			LEFT JOIN course_programs AS cp
+				ON c.course_program_ID = cp.course_program_ID
+			LEFT JOIN professors AS p
+				ON c.professor_ID = p.professor_ID
+			LEFT JOIN semester AS s
+				ON c.semester_ID = s.semester_ID
+			LEFT JOIN status AS st
+				ON j.status_ID = st.status_ID
+			LEFT JOIN grades AS g
+				ON j.grade_ID = g.grade_ID
+			WHERE j.id = $1`
 
-	//check student cannot make duplicate apply on same job_post
-	var count int
-	queryCheck := `SELECT COUNT(*) FROM ta_application 
-					WHERE job_post_id = $1
-					AND student_id = $2`
+	var course response.JobPost
+	var fullname string
 
-	err := r.db.QueryRow(queryCheck, body.JobPostID, body.StudentID).Scan(&count)
+	err := r.db.QueryRow(query, jobPostId).Scan(
+		&course.Task,
+		&course.JobPostID,
+		&course.CourseCode,
+		&course.CourseName,
+		&course.TaAllocation,
+		&course.WorkHour,
+		&course.ClassStart,
+		&course.ClassEnd,
+		&course.Location,
+		&course.CourseProgram,
+		&course.Classday,
+		&fullname,
+		&course.Semester,
+		&course.Status,
+		&course.Grade,
+		&course.CourseID,
+		&course.StatusID,
+		&course.Section,
+	)
+
 	if err != nil {
-		return 0, err
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("job post not found")
+		}
+		return nil, err
 	}
 
-	if count > 0 {
-		return 0, fmt.Errorf("student:%d already apply to this job", body.StudentID)
-	}
+	course.ProfessorName = fullname
+	return &course, nil
+}
 
-	tx, err := r.db.Begin()
-	if err != nil {
-		return 0, err
-	}
+func (r CourseRepositoryImplementation) InsertApplication(tx *sql.Tx, body request.ApplyJobPost) (int, error) {
 
-	var transcriptId int
-	query := "INSERT INTO transcript_storage(file_bytes,file_name) VALUES($1, $2) RETURNING transcript_ID"
-	err = tx.QueryRow(query, body.TranscriptBytes, body.TranscriptName).Scan(&transcriptId)
-	if err != nil {
-		tx.Rollback()
-		return 0, fmt.Errorf("failed on insert to transcript file : %v", err)
-	}
-
-	var bankAccountId int
-	query = "INSERT INTO bank_account_storage(file_bytes,file_name) VALUES($1, $2) RETURNING bank_account_ID"
-	err = tx.QueryRow(query, body.BankAccountBytes, body.BankAccountName).Scan(&bankAccountId)
-	if err != nil {
-		tx.Rollback()
-		return 0, fmt.Errorf("failed on insert to bank account file : %v", err)
-	}
-
-	var studentCardId int
-	query = "INSERT INTO student_card_storage(file_bytes,file_name) VALUES($1, $2) RETURNING student_card_ID"
-	err = tx.QueryRow(query, body.StudentCardBytes, body.StudentCardName).Scan(&studentCardId)
-	if err != nil {
-		tx.Rollback()
-		return 0, fmt.Errorf("failed on insert to student card file : %v", err)
-	}
-
-	statusId := 3
+	statusId := constants.PendingStatusID
 	var applicationId int
-	query = `INSERT INTO ta_application(
-				transcript_ID, 
-				bank_account_ID, 
-				student_card_ID,
-				student_ID, 
-				status_ID, 
-				job_post_ID,
-				grade,
-				purpose,
-				created_date)
-			VALUES($1, $2, $3, $4, $5, $6 ,$7, $8, $9)
-			RETURNING id`
-
-	err = tx.QueryRow(query,
-		transcriptId,
-		bankAccountId,
-		studentCardId,
+	// Insert new application
+	query := `INSERT INTO ta_application(
+					student_ID, 
+					status_ID, 
+					job_post_ID,
+					grade,
+					purpose,
+					created_date)
+				VALUES($1, $2, $3, $4, $5, $6 )
+				RETURNING id`
+	err := tx.QueryRow(query,
 		body.StudentID,
 		statusId,
 		body.JobPostID,
@@ -610,46 +776,155 @@ func (r CourseRepositoryImplementation) ApplyJobPost(body request.ApplyJobPost) 
 	).Scan(&applicationId)
 
 	if err != nil {
-		tx.Rollback()
 		return 0, fmt.Errorf("failed on insert to ta_application: %v", err)
-	}
-
-	query = "UPDATE students SET phone_number = $1 WHERE student_ID = $2"
-	_, err = tx.Exec(query, body.PhoneNumber, body.StudentID)
-	if err != nil {
-		tx.Rollback()
-		return 0, fmt.Errorf("failed on update to students: %v", err)
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		tx.Rollback()
-		return 0, fmt.Errorf("failed on commit transaction")
 	}
 
 	return applicationId, nil
 
 }
 
+func (r CourseRepositoryImplementation) CheckStudentJobpostStatus(body request.ApplyJobPost) (bool, error) {
+	// check student status on this job
+	var existingStatusID int
+	var existingID int
+	queryCheck := `SELECT id, status_id FROM ta_application 
+					WHERE job_post_id = $1
+					AND student_id = $2`
+
+	err := r.db.QueryRow(queryCheck, body.JobPostID, body.StudentID).Scan(&existingID, &existingStatusID)
+	if err != nil && err != sql.ErrNoRows {
+		return false, err
+	}
+
+	if err == nil {
+		// If application exists, only allow re-application if status is Rejected (4)
+		if existingStatusID != constants.RejectedStatusID {
+			return false, fmt.Errorf("student:%d already apply to this job with status:%d", body.StudentID, existingStatusID)
+		}
+	}
+
+	return true, nil
+}
+
+func (r CourseRepositoryImplementation) GetTaAllocation(jobPostID int) (int, error) {
+
+	//check ta allocation
+	var taAllocation int
+	query := `SELECT ta_allocation FROM ta_job_posting WHERE id = $1`
+	err := r.db.QueryRow(query, jobPostID).Scan(&taAllocation)
+	if err != nil {
+		return 0, err
+	}
+
+	return taAllocation, nil
+}
+
+func (r CourseRepositoryImplementation) CountTaAllocation(jobPostID int) (int, error) {
+
+	//count ta allocation
+	allocationQuery := `SELECT COUNT(*) FROM ta_application WHERE job_post_id = $1 AND status_id = $2`
+	allocationCount := 0
+	err := r.db.QueryRow(allocationQuery, jobPostID, constants.ApprovedStatusID).Scan(&allocationCount)
+	if err != nil {
+		return 0, err
+	}
+
+	return allocationCount, nil
+}
+
+func (r CourseRepositoryImplementation) UpsertTranscript(tx *sql.Tx, body request.ApplyJobPost) error {
+
+	query := `INSERT INTO transcript_storage(file_bytes,file_name,student_ID) 
+					VALUES($1, $2, $3) 
+					ON CONFLICT (student_ID)
+					DO UPDATE SET
+						file_bytes = EXCLUDED.file_bytes,
+						file_name = EXCLUDED.file_name;`
+	_, err := tx.Exec(query, body.TranscriptBytes, body.TranscriptName, body.StudentID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r CourseRepositoryImplementation) UpsertBankAccount(tx *sql.Tx, body request.ApplyJobPost) error {
+
+	query := `INSERT INTO bank_account_storage(file_bytes,file_name,student_ID) 
+					VALUES($1, $2, $3) 
+					ON CONFLICT (student_ID)
+					DO UPDATE SET
+						file_bytes = EXCLUDED.file_bytes,
+						file_name = EXCLUDED.file_name;`
+	_, err := tx.Exec(query, body.TranscriptBytes, body.TranscriptName, body.StudentID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r CourseRepositoryImplementation) UpsertStudentCard(tx *sql.Tx, body request.ApplyJobPost) error {
+
+	query := `INSERT INTO student_card_storage(file_bytes,file_name,student_ID) 
+					VALUES($1, $2, $3) 
+					ON CONFLICT (student_ID)
+					DO UPDATE SET
+						file_bytes = EXCLUDED.file_bytes,
+						file_name = EXCLUDED.file_name;`
+	_, err := tx.Exec(query, body.TranscriptBytes, body.TranscriptName, body.StudentID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r CourseRepositoryImplementation) UpdateStudentData(tx *sql.Tx, body request.ApplyJobPost) error {
+
+	updateStudentQuery := `UPDATE students SET 
+							phone_number = $1,
+							firstname_thai = $2, 
+							lastname_thai = $3 
+							WHERE student_ID=$4`
+	_, err := tx.Exec(updateStudentQuery, body.PhoneNumber, body.FirstnameThai, body.LastnameThai, body.StudentID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r CourseRepositoryImplementation) GetApplicationByStudentId(studentId int) ([]response.Application, error) {
 	query := `SELECT 
+					ta.id,
 					ta.student_ID, 
 					ta.status_ID, 
+					tp.id,
 					tp.course_ID, 
 					ta.created_date,
 					st.status_value,
 					c.course_name,
 					c.class_day,
 					c.class_start,
-					c.class_end
+					c.class_end,
+					p.firstname,
+					p.lastname,
+					tp.location,
+					ta.reject_reason
 				FROM ta_application AS ta 
 				LEFT JOIN ta_job_posting AS tp
 					ON ta.job_post_ID = tp.id
 				LEFT JOIN courses AS c
 					ON tp.course_ID = c.course_ID
+				LEFT JOIN semester AS s
+					ON c.semester_ID = s.semester_ID
+				LEFT JOIN professors AS p
+					ON c.professor_ID = p.professor_ID
 				LEFT JOIN status AS st
 					ON ta.status_ID = st.status_ID
-				WHERE student_ID = $1`
+				WHERE student_ID = $1
+					AND CURRENT_DATE BETWEEN s.start_date AND s.end_date`
 
 	rows, err := r.db.Query(query, studentId)
 	if err != nil {
@@ -660,10 +935,15 @@ func (r CourseRepositoryImplementation) GetApplicationByStudentId(studentId int)
 	var applications []response.Application
 	for rows.Next() {
 		var application response.Application
+		var firstname, lastname string
 
+		var jobPostID *int
+		var rejectReason *string
 		err := rows.Scan(
+			&application.ApplicationId,
 			&application.StudentID,
 			&application.StatusID,
+			&jobPostID,
 			&application.CourseID,
 			&application.CreatedDate,
 			&application.StatusCode,
@@ -671,9 +951,20 @@ func (r CourseRepositoryImplementation) GetApplicationByStudentId(studentId int)
 			&application.Classday,
 			&application.ClassStart,
 			&application.ClassEnd,
+			&firstname,
+			&lastname,
+			&application.Location,
+			&rejectReason,
 		)
 		if err != nil {
 			return nil, err
+		}
+		application.ProfessorName = firstname + " " + lastname
+		if jobPostID != nil {
+			application.JobPostID = *jobPostID
+		}
+		if rejectReason != nil {
+			application.RejectReason = *rejectReason
 		}
 		applications = append(applications, application)
 	}
@@ -681,16 +972,111 @@ func (r CourseRepositoryImplementation) GetApplicationByStudentId(studentId int)
 	return applications, nil
 }
 
-func (r CourseRepositoryImplementation) GetApplicationByCourseId(courseId int) ([]response.Application, error) {
-	query := `SELECT 
-					ta.student_ID, 
-					ta.status_ID, 
-					ta.course_ID, 
+// GetAllTimeApprovedCoursesByStudentId returns all APPROVED courses across ALL semesters for a student.
+func (r CourseRepositoryImplementation) GetAllTimeApprovedCoursesByStudentId(studentId int) ([]response.Application, error) {
+	query := `SELECT
+					DISTINCT ON (c.course_ID)
+					ta.id,
+					ta.student_ID,
+					ta.status_ID,
+					tp.id,
+					tp.course_ID,
 					ta.created_date,
-					st.status_value
-				FROM ta_application AS ta 
+					st.status_value,
+					c.course_name,
+					c.course_code,
+					c.class_day,
+					c.class_start,
+					c.class_end,
+					CONCAT(p.prefix, ' ', p.firstname_thai, ' ', p.lastname_thai) AS professor_name,
+					tp.location,
+					ta.reject_reason
+				FROM ta_application AS ta
+				LEFT JOIN ta_job_posting AS tp
+					ON ta.job_post_ID = tp.id
+				LEFT JOIN courses AS c
+					ON tp.course_ID = c.course_ID
+				LEFT JOIN professors AS p
+					ON c.professor_ID = p.professor_ID
 				LEFT JOIN status AS st
 					ON ta.status_ID = st.status_ID
+				LEFT JOIN semester AS s
+					ON c.semester_ID = s.semester_ID
+				WHERE ta.student_ID = $1
+					AND st.status_value = 'APPROVED'
+					AND s.end_date < CURRENT_DATE
+				ORDER BY c.course_ID, ta.created_date DESC`
+
+	rows, err := r.db.Query(query, studentId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var applications []response.Application
+	for rows.Next() {
+		var application response.Application
+		var professorName string
+		var jobPostID *int
+		var rejectReason *string
+		err := rows.Scan(
+			&application.ApplicationId,
+			&application.StudentID,
+			&application.StatusID,
+			&jobPostID,
+			&application.CourseID,
+			&application.CreatedDate,
+			&application.StatusCode,
+			&application.CourseName,
+			&application.CourseCode,
+			&application.Classday,
+			&application.ClassStart,
+			&application.ClassEnd,
+			&professorName,
+			&application.Location,
+			&rejectReason,
+		)
+		if err != nil {
+			return nil, err
+		}
+		application.ProfessorName = professorName
+		if jobPostID != nil {
+			application.JobPostID = *jobPostID
+		}
+		if rejectReason != nil {
+			application.RejectReason = *rejectReason
+		}
+		applications = append(applications, application)
+	}
+	return applications, nil
+}
+
+func (r CourseRepositoryImplementation) GetApplicationByCourseId(courseId int) ([]response.Application, error) {
+	query := `SELECT 
+					ta.id,
+					ta.student_ID, 
+					ta.status_ID, 
+					tp.course_ID, 
+					ta.created_date,
+					st.status_value,
+					s.firstname_thai,
+					s.lastname_thai,
+					CASE WHEN ts.transcript_ID IS NOT NULL THEN true ELSE false END as has_transcript,
+					CASE WHEN ba.bank_account_ID IS NOT NULL THEN true ELSE false END as has_bank_account,
+					CASE WHEN sc.student_card_ID IS NOT NULL THEN true ELSE false END as has_student_card
+				FROM ta_application AS ta 
+				LEFT JOIN ta_job_posting AS tp
+					ON ta.job_post_ID = tp.id
+				LEFT JOIN status AS st
+					ON ta.status_ID = st.status_ID
+				LEFT JOIN students AS s
+					ON ta.student_ID = s.student_ID
+				LEFT JOIN transcript_storage ts
+					ON ta.student_ID = ts.student_ID
+				LEFT JOIN student_card_storage sc
+					ON ta.student_ID = sc.student_ID
+				LEFT JOIN bank_account_storage ba
+					ON ta.student_ID = ba.student_ID
 				WHERE course_ID = $1`
 
 	rows, err := r.db.Query(query, courseId)
@@ -702,17 +1088,26 @@ func (r CourseRepositoryImplementation) GetApplicationByCourseId(courseId int) (
 	var applications []response.Application
 	for rows.Next() {
 		var application response.Application
+		var firstname string
+		var lastname string
 
 		err := rows.Scan(
+			&application.ApplicationId,
 			&application.StudentID,
 			&application.StatusID,
 			&application.CourseID,
 			&application.CreatedDate,
 			&application.StatusCode,
+			&firstname,
+			&lastname,
+			&application.HasTranscript,
+			&application.HasBankAccount,
+			&application.HasStudentCard,
 		)
 		if err != nil {
 			return nil, err
 		}
+		application.StudentName = firstname + " " + lastname
 		applications = append(applications, application)
 	}
 
@@ -808,59 +1203,83 @@ func (r CourseRepositoryImplementation) GetApplicationStudentCardPdf(Application
 	return &applicationPdf, nil
 }
 
-func (r CourseRepositoryImplementation) ApproveApplication(ApplicationId int) error {
+func (r CourseRepositoryImplementation) UpdateApplicationStatus(tx *sql.Tx, ApplicationId int) error {
 
-	tx, err := r.db.Begin()
+	//update status on ta_application
+	approveStatus := constants.ApprovedStatusID
+	query := `UPDATE ta_application SET status_ID = $1 WHERE id = $2`
+
+	_, err := tx.Exec(query, approveStatus, ApplicationId)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed update ta_application: %v", err)
 	}
 
+	return nil
+}
+
+func (r CourseRepositoryImplementation) InsertTaCourse(tx *sql.Tx, studentID, courseID int) error {
+
+	//Insert new ta_course
+	query := `INSERT INTO ta_courses(
+				student_ID,
+				course_ID,
+				created_date)
+				VALUES($1, $2, $3)`
+	_, err := tx.Exec(query, studentID, courseID, time.Now())
+	if err != nil {
+		return fmt.Errorf("failed to Insert new ta_course : %v", err)
+	}
+
+	return nil
+}
+
+func (r CourseRepositoryImplementation) GetApproveApplicationData(applicationID int) (int, int, int, error) {
 	//get courseId,studentId
 	pendingStatus := 3
 	var courseId int
 	var studentId int
+	var jobPostId int
 	query := `SELECT 
 					jp.course_ID, 
+					jp.id,
 					ta.student_ID 
 				FROM ta_application as ta
 				LEFT JOIN ta_job_posting as jp
 					ON ta.job_post_ID = jp.id
 				WHERE ta.id =$1 AND ta.status_id =$2`
 
-	err = tx.QueryRow(query,
-		ApplicationId,
-		pendingStatus).Scan(&courseId, &studentId)
+	err := r.db.QueryRow(query,
+		applicationID,
+		pendingStatus).Scan(&courseId, &jobPostId, &studentId)
 	if err != nil {
-		tx.Rollback()
-		return fmt.Errorf("failed get courseId : %v", err)
+		return 0, 0, 0, err
 	}
 
-	//update status on ta_application
-	approveStatus := 5
-	query = `UPDATE ta_application SET status_ID = $1 WHERE id = $2`
+	return courseId, studentId, jobPostId, nil
 
-	_, err = tx.Exec(query, approveStatus, ApplicationId)
+}
+
+func (r CourseRepositoryImplementation) UpdateJobPostStatus(jobPostId int) error {
+
+	query := `UPDATE ta_job_posting SET status_id = $1 WHERE id = $2`
+	_, err := r.db.Exec(query, constants.SuccessFulStatusID, jobPostId)
 	if err != nil {
-		tx.Rollback()
+		return fmt.Errorf("failed update ta_job_posting: %v", err)
+	}
+
+	return nil
+}
+
+func (r CourseRepositoryImplementation) RejectApplication(rq request.RejectApplication) error {
+	// update status on ta_application
+	rejectStatus := constants.RejectedStatusID
+	query := `UPDATE ta_application SET status_ID = $1, reject_reason = $2 WHERE id = $3`
+
+	_, err := r.db.Exec(query, rejectStatus, rq.RejectReason, rq.ApplicationId)
+	if err != nil {
 		return fmt.Errorf("failed update ta_application: %v", err)
 	}
 
-	//Insert new ta_course
-	query = `INSERT INTO ta_courses(
-				student_ID,
-				course_ID,
-				created_date)
-				VALUES($1, $2, $3)`
-	_, err = tx.Exec(query, studentId, courseId, time.Now())
-	if err != nil {
-		tx.Rollback()
-		return fmt.Errorf("failed to Insert new ta_course : %v", err)
-	}
-
-	if err := tx.Commit(); err != nil {
-		tx.Rollback()
-		return fmt.Errorf("failed on commit transaction")
-	}
 	return nil
 }
 
@@ -876,10 +1295,15 @@ func (r CourseRepositoryImplementation) GetApplicationByProfessorId(professorId 
 					ta.grade,
 					stu.firstname,
 					stu.lastname,
+					stu.firstname_thai,
+					stu.lastname_thai,
 					stu.phone_number,
-					CASE WHEN ta.transcript_ID IS NOT NULL THEN true ELSE false END as has_transcript,
-					CASE WHEN ta.bank_account_ID IS NOT NULL THEN true ELSE false END as has_bank_account,
-					CASE WHEN ta.student_card_ID IS NOT NULL THEN true ELSE false END as has_student_card
+					CASE WHEN ts.transcript_ID IS NOT NULL THEN true ELSE false END as has_transcript,
+					CASE WHEN ba.bank_account_ID IS NOT NULL THEN true ELSE false END as has_bank_account,
+					CASE WHEN sc.student_card_ID IS NOT NULL THEN true ELSE false END as has_student_card,
+					c.class_day,
+					c.class_start,
+					c.class_end
 				FROM ta_application AS ta 
 				LEFT JOIN status AS st
 					ON ta.status_ID = st.status_ID
@@ -887,9 +1311,18 @@ func (r CourseRepositoryImplementation) GetApplicationByProfessorId(professorId 
 					ON ta.job_post_ID = jp.id
 				LEFT JOIN courses AS c
 					ON jp.course_ID = c.course_ID
+				LEFT JOIN semester AS s
+					ON c.semester_ID = s.semester_ID
 				LEFT JOIN students AS stu
 					ON ta.student_id = stu.student_id
-				WHERE c.professor_ID = $1`
+				LEFT JOIN transcript_storage ts
+					ON ta.student_ID = ts.student_ID
+				LEFT JOIN student_card_storage sc
+					ON ta.student_ID = sc.student_ID
+				LEFT JOIN bank_account_storage ba
+					ON ta.student_ID = ba.student_ID
+				WHERE c.professor_ID = $1
+					AND CURRENT_DATE BETWEEN s.start_date AND s.end_date`
 
 	rows, err := r.db.Query(query, professorId)
 	if err != nil {
@@ -902,6 +1335,8 @@ func (r CourseRepositoryImplementation) GetApplicationByProfessorId(professorId 
 		var application response.Application
 		var firstname string
 		var lastname string
+		var firstnameTH sql.NullString
+		var lastnameTH sql.NullString
 
 		err := rows.Scan(
 			&application.ApplicationId,
@@ -914,18 +1349,44 @@ func (r CourseRepositoryImplementation) GetApplicationByProfessorId(professorId 
 			&application.Grade,
 			&firstname,
 			&lastname,
+			&firstnameTH,
+			&lastnameTH,
 			&application.PhoneNumber,
 			&application.HasTranscript,
 			&application.HasBankAccount,
 			&application.HasStudentCard,
+			&application.Classday,
+			&application.ClassStart,
+			&application.ClassEnd,
 		)
 		if err != nil {
 			return nil, err
 		}
 
 		application.StudentName = firstname + " " + lastname
+		application.StudentNameTH = firstnameTH.String + " " + lastnameTH.String
 		applications = append(applications, application)
 	}
 
 	return applications, nil
+}
+
+func (r CourseRepositoryImplementation) StartDBTx() (*sql.Tx, error) {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+
+	return tx, nil
+}
+
+func (r CourseRepositoryImplementation) CommitTx(tx *sql.Tx) error {
+	return tx.Commit()
+}
+
+func (r CourseRepositoryImplementation) RollbackTx(tx *sql.Tx) error {
+	if tx != nil {
+		return tx.Rollback()
+	}
+	return nil
 }

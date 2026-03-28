@@ -29,9 +29,11 @@ func InitializeController(courseService service.CourseService, r *gin.RouterGrou
 		r.GET("/professor/:professorId", c.getProfessorCourse)
 		r.PATCH("/:courseId", c.updateCourse)
 		r.DELETE("/:courseId", c.deleteCourse)
+		r.POST("/:courseId/discord", c.updateCourseDiscord)
 
 		r.POST("/jobpost", c.createJobPost)
 		r.GET("/jobpost", c.findAllJobPost)
+		r.GET("/jobpost/all", c.findAllJobPostAllStatus)
 		r.GET("", c.getAllCourse)
 		r.GET("/student/:studentId", c.GetAllJobPostByStudentId)
 		r.PATCH("/jobpost/:jobpostId", c.updateJobPost)
@@ -39,13 +41,20 @@ func InitializeController(courseService service.CourseService, r *gin.RouterGrou
 
 		r.POST("/apply/:jobPostId", c.applyJobPost)
 		r.GET("/application/student/:studentId", c.getApplicationByStudentId)
+		r.GET("/application/student/:studentId/alltime", c.getApplicationAllTimeByStudentId)
 		r.GET("/application/course/:courseId", c.getApplicationBycourseId)
 		r.GET("/application/professor/:professorId", c.getApplicationByProfessorId)
 		r.GET("/application/:applilcationId", c.getApplicationDetail)
-		r.GET("/application/transcript/:applicationId", c.getApplicationtranscriptPdf)
-		r.GET("/application/bankaccount/:applicationId", c.getApplicationbankAccountPdf)
-		r.GET("/application/studentcard/:applicationId", c.getApplicationstudentCardPdf)
+
+		// r.GET("/application/transcript/:applicationId", c.getApplicationtranscriptPdf)
+		// r.GET("/application/bankaccount/:applicationId", c.getApplicationbankAccountPdf)
+		// r.GET("/application/studentcard/:applicationId", c.getApplicationstudentCardPdf)
+
 		r.POST("/application/approve/:applicationId", c.approveApplication)
+		r.POST("/application/reject/:applicationId", c.rejectApplication)
+
+		r.GET("/history", c.getTermHistory)
+		r.GET("/history/:semesterId", c.getHistoryCourses)
 	}
 }
 
@@ -57,6 +66,16 @@ func InitializePublicController(courseService service.CourseService, r *gin.Rout
 func (controller CourseController) findAllJobPost(ctx *gin.Context) {
 	//validate
 	result, err := controller.service.GetAllJobPost()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong"})
+		return
+	}
+	ctx.JSON(http.StatusOK, result)
+}
+
+func (controller CourseController) findAllJobPostAllStatus(ctx *gin.Context) {
+	//validate
+	result, err := controller.service.GetAllJobPostAllStatus()
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong"})
 		return
@@ -193,7 +212,7 @@ func (controller CourseController) updateJobPost(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "something went wrong"})
 		return
 	}
-	ctx.JSON(http.StatusNoContent, result)
+	ctx.JSON(http.StatusOK, result)
 }
 
 func (controller CourseController) deleteJobPost(ctx *gin.Context) {
@@ -218,27 +237,36 @@ func (controller CourseController) applyJobPost(ctx *gin.Context) {
 		return
 	}
 
-	transcriptName, transcriptBytes, err := utils.GetFileData(ctx, "Transcript")
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	bankAccountName, bankAccountBytes, err := utils.GetFileData(ctx, "BankAccount")
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	studentCardName, studentCardBytes, err := utils.GetFileData(ctx, "StudentCard")
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
 	if err := ctx.ShouldBind(&rq); err != nil {
 		fmt.Println(err)
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "body request not valid"})
+		return
+	}
+
+	// Transcript handling
+	var transcriptName string
+	var transcriptBytes *[]byte
+	var err error
+
+	if rq.AttachNewPDF {
+		transcriptName, transcriptBytes, err = utils.GetFileData(ctx, "Transcript")
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Transcript file is required"})
+			return
+		}
+	}
+
+	// BankAccount is OPTIONAL
+	bankAccountName, bankAccountBytes, err := utils.GetOptionalFileData(ctx, "BankAccount")
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Error reading BankAccount file: " + err.Error()})
+		return
+	}
+
+	// StudentCard is OPTIONAL
+	studentCardName, studentCardBytes, err := utils.GetOptionalFileData(ctx, "StudentCard")
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Error reading StudentCard file: " + err.Error()})
 		return
 	}
 
@@ -269,6 +297,20 @@ func (controller CourseController) getApplicationByStudentId(ctx *gin.Context) {
 	}
 
 	result, err := controller.service.GetApplicationByStudentId(id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, result)
+		return
+	}
+	ctx.JSON(http.StatusOK, result)
+}
+
+func (controller CourseController) getApplicationAllTimeByStudentId(ctx *gin.Context) {
+	id, ok := utils.ValidateParam(ctx, "studentId")
+	if !ok {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Validate Param Failed."})
+		return
+	}
+	result, err := controller.service.GetAllTimeApprovedCoursesByStudentId(id)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, result)
 		return
@@ -403,4 +445,70 @@ func (controller CourseController) approveApplication(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusCreated, result)
+}
+
+func (controller CourseController) rejectApplication(ctx *gin.Context) {
+	rq := request.RejectApplication{}
+
+	id, ok := utils.ValidateParam(ctx, "applicationId")
+	if !ok {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Validate Param Failed."})
+		return
+	}
+	rq.ApplicationId = id
+	if err := ctx.ShouldBindJSON(&rq); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "body request not valid"})
+		return
+	}
+
+	result, err := controller.service.RejectApplication(rq)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, result)
+		return
+	}
+	ctx.JSON(http.StatusCreated, result)
+}
+
+func (controller CourseController) updateCourseDiscord(ctx *gin.Context) {
+	courseId, ok := utils.ValidateParam(ctx, "courseId")
+	if !ok {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Validation Param Failed"})
+		return
+	}
+
+	var rq request.UpdateCourseDiscord
+	if err := ctx.ShouldBindJSON(&rq); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request data"})
+		return
+	}
+
+	result, err := controller.service.UpdateCourseDiscord(courseId, rq.RoleID, rq.ChannelID, rq.ChannelName)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+		return
+	}
+	ctx.JSON(http.StatusOK, result)
+}
+
+func (controller CourseController) getTermHistory(ctx *gin.Context) {
+	result, err := controller.service.GetTermHistory()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong"})
+		return
+	}
+	ctx.JSON(http.StatusOK, result)
+}
+
+func (controller CourseController) getHistoryCourses(ctx *gin.Context) {
+	semesterID, ok := utils.ValidateParam(ctx, "semesterId")
+	if !ok {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Validation Param Failed"})
+		return
+	}
+	result, err := controller.service.GetHistoryCourses(semesterID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong"})
+		return
+	}
+	ctx.JSON(http.StatusOK, result)
 }

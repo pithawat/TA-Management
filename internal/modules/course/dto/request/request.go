@@ -2,21 +2,10 @@ package request
 
 import "time"
 
-// type CreateCourse struct {
-// 	CourseName      string    `json:"courseName"`
-// 	CourseID        string    `json:"courseID"`
-// 	ProfessorID     int       `json:"professorID"`
-// 	CourseProgramID int       `json:"courseProgramID"`
-// 	CourseProgram   string    `json:"courseProgram"`
-// 	Sec             string    `json:"sec"`
-// 	SemesterID      int       `json:"semesterID"`
-// 	Semester        string    `json:"semester"`
-// 	ClassdayID      int       `json:"classdayID"`
-// 	Classday        string    `json:"classday"`
-// 	ClassStart      time.Time `json:"classStart"`
-// 	ClassEnd        time.Time `json:"classEnd"`
-// 	CreatedDate     time.Time `json:"-"`
-// }
+type RejectApplication struct {
+	ApplicationId int    `json:"applicationId"`
+	RejectReason  string `json:"rejectReason"`
+}
 
 type CreateCourse struct {
 	CourseName      string    `json:"courseName"`
@@ -47,7 +36,6 @@ type CreateJobPost struct {
 
 type UpdateJobPost struct {
 	Id           int     `json:"id"`
-	CourseID     *string `json:"courseID"`
 	ProfessorID  *int    `json:"professorID"`
 	Location     *string `json:"location"`
 	TaAllocation *int    `json:"taAllocation"`
@@ -74,8 +62,12 @@ type UpdateCourse struct {
 
 type ApplyJobPost struct {
 	StudentID        int    `form:"studentID"`
+	FirstName        string `form:"firstName"`
+	LastName         string `form:"lastName"`
 	Grade            string `form:"grade"`
 	Purpose          string `form:"purpose"`
+	Experience       string `form:"experience"`
+	AttachNewPDF     bool   `form:"attachNewPDF"`
 	JobPostID        *int
 	TranscriptBytes  *[]byte
 	TranscriptName   *string
@@ -84,4 +76,12 @@ type ApplyJobPost struct {
 	StudentCardBytes *[]byte
 	StudentCardName  *string
 	PhoneNumber      *string `form:"phoneNumber"`
+	FirstnameThai    *string `form:"firstname_thai"`
+	LastnameThai     *string `form:"lastname_thai"`
+}
+
+type UpdateCourseDiscord struct {
+	RoleID      string `json:"role_id"`
+	ChannelID   string `json:"channel_id"`
+	ChannelName string `json:"channel_name"`
 }

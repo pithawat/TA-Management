@@ -28,6 +28,15 @@
       networks:
         - test_network
 
+    redis:
+      image: redis:alpine
+      container_name: ta_test_redis
+      restart: always
+      ports:
+        - "6380:6379"
+      networks:
+        - test_network
+
     # ----------------------------------------
     # B. The Go Application Test Runner Service
     # ----------------------------------------

@@ -4,4 +4,5 @@ type CreateStudent struct {
 	StudentID int
 	Firstname string
 	Lastname  string
+	Email     string
 }

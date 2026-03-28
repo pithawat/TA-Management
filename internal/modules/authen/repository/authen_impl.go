@@ -15,17 +15,11 @@ func NewAuthenRepository(DB *sql.DB) AuthenRepositoryImplementation {
 	return AuthenRepositoryImplementation{db: DB}
 }
 
-func (r AuthenRepositoryImplementation) CheckUserRole(name string) (string, error) {
-	parts := strings.Split(name, " ")
-	if len(parts) != 2 {
-		return "", fmt.Errorf("invalid name format")
-	}
-	firstname := parts[0]
-	lastname := parts[1]
+func (r AuthenRepositoryImplementation) CheckUserRole(email string) (string, error) {
 
 	var isProf bool
-	query := "SELECT EXISTS(SELECT 1 FROM professors WHERE firstname = $1 AND lastname = $2)"
-	err := r.db.QueryRow(query, firstname, lastname).Scan(&isProf)
+	query := "SELECT EXISTS(SELECT 1 FROM professors WHERE email=$1)"
+	err := r.db.QueryRow(query, email).Scan(&isProf)
 	if err != nil {
 		return "", err
 	}
@@ -34,8 +28,8 @@ func (r AuthenRepositoryImplementation) CheckUserRole(name string) (string, erro
 	}
 
 	var isAccount bool
-	query = "SELECT EXISTS(SELECT 1 FROM accountants WHERE firstname = $1 AND lastname = $2)"
-	err = r.db.QueryRow(query, firstname, lastname).Scan(&isAccount)
+	query = "SELECT EXISTS(SELECT 1 FROM accountants WHERE email=$1)"
+	err = r.db.QueryRow(query, email).Scan(&isAccount)
 	if err != nil {
 		return "", err
 	}
@@ -61,11 +55,12 @@ func (r AuthenRepositoryImplementation) AddStudent(rq request.CreateStudent) err
 		return nil
 	}
 
-	query := `INSERT INTO students(student_ID, firstname, lastname) VALUES($1, $2, $3)`
+	query := `INSERT INTO students(student_ID, firstname, lastname, email) VALUES($1, $2, $3, $4)`
 	_, err = r.db.Exec(query,
 		rq.StudentID,
 		rq.Firstname,
-		rq.Lastname)
+		rq.Lastname,
+		rq.Email)
 
 	if err != nil {
 		return err
