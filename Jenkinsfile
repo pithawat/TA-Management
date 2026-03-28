@@ -159,8 +159,7 @@ post {
                 sh "docker compose -f ${TEST_DB_COMPOSE} down -v || true"
                 // Clean workspace and handle root-owned files if they still exist
                 cleanWs() 
-                // If cleanWs still fails, this shell command is the backup:
-                sh "sudo rm -rf ${WORKSPACE}/* || true"
+                sh "docker run --rm -v ${WORKSPACE}:/src alpine sh -c 'rm -rf /src/*'"
             }
         }
     }
