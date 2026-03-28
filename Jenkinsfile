@@ -1,171 +1,98 @@
 pipeline {
     agent any
 
-   environment {
+    environment {
         TEST_DB_COMPOSE = 'docker-compose.test.yml'
         APP_NAME = 'ta-management'
         DOCKER_IMAGE_TAG = "${APP_NAME}:${env.BUILD_NUMBER}"
         DOCKER_REGISTRY = 'ghcr.io/pithawat'
-        FULL_IMAGE_NAME = '${DOCKER_REGISTRY}/${DOCKER_IMAGE_TAG}'
-   }
-
-   stages {
-    stage('Checkout') {
-        steps{
-            checkout scm
-            echo "Repository checked out successfully"
-        }
+        // แก้ไข: ใช้ Double Quotes เพื่อให้ตัวแปรทำงาน
+        FULL_IMAGE_NAME = "${DOCKER_REGISTRY}/${DOCKER_IMAGE_TAG}"
     }
 
-
-
-    stage('Configure Enviroment and Run Tests'){
-        steps{
-            withCredentials([
-                file(credentialsId: 'DOT_ENV_FILE', variable: 'ENV_PATH')
-            ]){
-                sh ("""
-                    mv "${ENV_PATH}" ./.env
-                    ls -al ./.env
-                """)
-            }
-
-        }
-    }
-
-    stage('Build Image'){
-        steps{
-            script{
-                echo "Building the application binary and testing image.."
-
-                sh "docker build -t ${DOCKER_IMAGE_TAG} --target test-builder ."
-
-                sh "docker tag ${DOCKER_IMAGE_TAG} ${FULL_IMAGE_NAME}"
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
             }
         }
-    }
 
-    stage('Integration Tests') {
-        steps{
-            script{
-                echo "Starting Dockerized Integration Tests..."
-                sh "docker compose -f ${TEST_DB_COMPOSE} down -v"
-              // Capture exit code
-                def testExitCode = sh(
-                    script: "docker compose -f ${TEST_DB_COMPOSE} up --build --force-recreate --abort-on-container-exit --exit-code-from app_test",
-                    returnStatus: true
-                )
-                
-                // Check if tests failed
-                if (testExitCode != 0) {
-                    error("Integration tests failed with exit code: ${testExitCode}")
+        stage('Build & Test Image') {
+            steps {
+                script {
+                    // Build builder stage เพื่อเตรียม binary
+                    sh "docker build -t ${DOCKER_IMAGE_TAG} --target test-builder ."
                 }
-                
-                echo "✅ All integration tests passed!"
-
             }
         }
-    }
 
-    stage('Publish Image'){
-        steps{
-            script{
-                withCredentials([usernamePassword(credentialsId: 'ghcr-creds', usernameVariable: 'GH_USER', passwordVariable: 'GH_PAT')]){
-                sh """
-                    docker build -t ${DOCKER_IMAGE_TAG} --target final .
-                    docker tag ${DOCKER_IMAGE_TAG} ${FULL_IMAGE_NAME}
-
-                    echo "Logging into Github container Registry..."
-                    echo \$GH_PAT | docker login ghcr.io -u \$GH_USER --password-stdin
-
-                    echo "Tagging image ${DOCKER_IMAGE_TAG} to ${FULL_IMAGE_NAME}"
-                    docker tag ${DOCKER_IMAGE_TAG} ${FULL_IMAGE_NAME}
-
-                    echo "Pushing image to GHCR..."
-                    docker push ${FULL_IMAGE_NAME}
-                """
-            }
-            echo "Image successfully pushed to GHCR."
+        stage('Integration Tests') {
+            steps {
+                script {
+                    sh "docker compose -f ${TEST_DB_COMPOSE} down -v"
+                    def testExitCode = sh(
+                        script: "docker compose -f ${TEST_DB_COMPOSE} up --build --force-recreate --abort-on-container-exit --exit-code-from app_test",
+                        returnStatus: true
+                    )
+                    if (testExitCode != 0) {
+                        error("Integration tests failed")
+                    }
+                }
             }
         }
-    }
-    // stage('Deploy to VM-TEST'){
-    //     agent {label 'vm-test'}
-    //     steps{
-    //         echo "Deploying ${FULL_IMAGE_NAME} to Production Environment: ${env.NODE_NAME}"
 
-    //         withCredentials([usernamePassword(credentialsId: 'ghcr-creds', usernameVariable: 'GH_USER', passwordVariable: 'GH_PAT')]){
-    //             sh """
-    //                 echo "Logging into Github container Registry..."
-    //                 echo \$GH_PAT | docker login ghcr.io -u \$GH_USER --password-stdin
-    //                 sudo usermod -aG docker $USER
-    //                 newgrp docker
-    //                 docker pull ${FULL_IMAGE_NAME}
-
-    //                 docker stop $APP_NAME || true
-    //                 docker rm $APP_NAME || true
-
-    //                 docker run -d --name $APP_NAME -p 8084:8080 ${FULL_IMAGE_NAME}
-    //             """
-    //         }
-    //      }
-    // }
-    
-    stage('Deploy to VM-PROD'){
-        agent {label 'vm-prod'}
-        steps{
-            echo "Deploying ${FULL_IMAGE_NAME} to Production Environment: ${env.NODE_NAME}"
-
-            withCredentials([usernamePassword(credentialsId: 'ghcr-creds', usernameVariable: 'GH_USER', passwordVariable: 'GH_PAT')]){
-                sh """
-                    echo "Logging into Github container Registry..."
-                    echo \$GH_PAT | docker login ghcr.io -u \$GH_USER --password-stdin
-                    docker pull ${FULL_IMAGE_NAME}
-
-                    docker stop $APP_NAME || true
-                    docker rm $APP_NAME || true
-
-                """
+        stage('Publish Image') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'ghcr-creds', usernameVariable: 'GH_USER', passwordVariable: 'GH_PAT')]) {
+                        sh """
+                            docker build -t ${FULL_IMAGE_NAME} --target final .
+                            echo \$GH_PAT | docker login ghcr.io -u \$GH_USER --password-stdin
+                            docker push ${FULL_IMAGE_NAME}
+                        """
+                    }
+                }
             }
+        }
+
+        // ย้าย Stage DB ขึ้นมาก่อน Deploy App
+        stage('Prepare DB') {
+            agent { label 'vm-db' }
+            steps {
+                sh "docker run --rm -v /home/link/jenkins/workspace/TA-management:/ws alpine sh -c 'rm -rf /ws/init.sql'"
+                checkout scm
+                sh "docker compose down -v && docker compose up -d"
+            }
+        }
+
+        stage('Deploy to VM-PROD') {
+            agent { label 'vm-prod' }
+            steps {
                 withCredentials([
+                    usernamePassword(credentialsId: 'ghcr-creds', usernameVariable: 'GH_USER', passwordVariable: 'GH_PAT'),
                     file(credentialsId: 'DOT_ENV_FILE', variable: 'ENV_PATH')
-                ]){
-                    sh '''
+                ]) {
+                    sh """
+                        echo \$GH_PAT | docker login ghcr.io -u \$GH_USER --password-stdin
+                        docker pull ${FULL_IMAGE_NAME}
+                        docker stop ${APP_NAME} || true
+                        docker rm ${APP_NAME} || true
+                        
+                        # รันโดยส่ง Environment Variables เข้าไปโดยตรง (ดีกว่าส่งไฟล์ path ที่ไม่มีอยู่จริง)
                         docker run -d \\
-                        --name ''' + APP_NAME + ''' \\
-                        -p 8084:8084 \\
-                        --env-file "${ENV_PATH}" \\
-                        ''' + FULL_IMAGE_NAME + '''
-                    '''
+                            --name ${APP_NAME} \\
+                            -p 8084:8084 \\
+                            --env-file ${ENV_PATH} \\
+                            ${FULL_IMAGE_NAME}
+                    """
                 }
             }
         }
-
-   stage('start DB'){
-    agent { label 'vm-db' }
-    steps {
-        // ใช้ Docker เข้าไปลบไฟล์ที่ติดสิทธิ์ Root ก่อนที่ Jenkins จะ Error
-        sh "docker run --rm -v /home/link/jenkins/workspace/TA-management:/ws alpine sh -c 'rm -rf /ws/init.sql'"
-        
-        checkout scm // หลังจากลบแล้วค่อย Checkout
-        
-        script {
-            sh "docker compose down -v"
-            sh "docker compose up -d"
-        }
     }
-}
-}
-post {
+    
+    post {
         always {
-            script {
-                echo "Performing final cleanup..."
-                sh "docker compose -f ${TEST_DB_COMPOSE} down -v || true"
-                // Clean workspace and handle root-owned files if they still exist
-                cleanWs() 
-                // If cleanWs still fails, this shell command is the backup:
-                sh "sudo rm -rf ${WORKSPACE}/* || true"
-            }
+            cleanWs()
         }
     }
 }
