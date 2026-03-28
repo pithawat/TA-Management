@@ -141,16 +141,20 @@ pipeline {
             }
         }
 
-    stage('start DB'){
-        agent {label 'vm-db'}
-        steps{
-            script{
-                echo "Run DB container"
-                sh "docker compose down -v"
-                sh "docker compose up -d"
-            }
+   stage('start DB'){
+    agent { label 'vm-db' }
+    steps {
+        // ใช้ Docker เข้าไปลบไฟล์ที่ติดสิทธิ์ Root ก่อนที่ Jenkins จะ Error
+        sh "docker run --rm -v /home/link/jenkins/workspace/TA-management:/ws alpine sh -c 'rm -rf /ws/init.sql'"
+        
+        checkout scm // หลังจากลบแล้วค่อย Checkout
+        
+        script {
+            sh "docker compose down -v"
+            sh "docker compose up -d"
         }
     }
+}
 }
 post {
         always {
