@@ -152,7 +152,7 @@ func (s AnnouncementServiceImplementation) CreateDiscordChannel(rq request.Creat
 
 	err = s.repo.CreateNewDiscordChannel(roleID, channelID, channelName, rq.CourseID)
 	if err != nil {
-		fmt.Printf("failed to add new discord channel data to db")
+		fmt.Printf("failed to add new discord channel data to db: %v\n", err)
 		return err
 	}
 
