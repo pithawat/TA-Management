@@ -64,7 +64,7 @@ func (controller AuthController) handleCallback(ctx *gin.Context) {
 		ctx.JSON(status, gin.H{"error": err.Error()})
 		return
 	}
-	ctx.SetCookie("auth_token", signedJWT, 3600*24*7, "/", "localhost", false, true) // Cookie lasts 7 days
+	ctx.SetCookie("auth_token", signedJWT, 3600*24*7, "/", "https://b39c86d6-3cf9-40d2-95b9-bf273ac483f0.cloud.ce.kmitl.ac.th", false, true) // Cookie lasts 7 days
 	// ctx.JSON(http.StatusOK, user)
 	ctx.Redirect(http.StatusTemporaryRedirect, utils.GetenvDefault("FRONTEND_URL", "http://localhost:3000/login"))
 }
