@@ -56,14 +56,14 @@ pipeline {
         }
 
         // ย้าย Stage DB ขึ้นมาก่อน Deploy App
-        stage('Prepare DB') {
-            agent { label 'vm-db' }
-            steps {
-                sh "docker run --rm -v /home/link/jenkins/workspace/TA-management:/ws alpine sh -c 'rm -rf /ws/init.sql'"
-                checkout scm
-                sh "docker compose down -v && docker compose up -d"
-            }
-        }
+        // stage('Prepare DB') {
+        //     agent { label 'vm-db' }
+        //     steps {
+        //         sh "docker run --rm -v /home/link/jenkins/workspace/TA-management:/ws alpine sh -c 'rm -rf /ws/init.sql'"
+        //         checkout scm
+        //         sh "docker compose down -v && docker compose up -d"
+        //     }
+        // }
 
         stage('Deploy to VM-PROD') {
             agent { label 'vm-prod' }
