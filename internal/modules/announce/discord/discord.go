@@ -50,7 +50,7 @@ func (c *DiscordHttpClient) CreateChannel(channelName string) (string, string, e
 		return "", "", fmt.Errorf("failed to marshal request: %v", err)
 	}
 
-	resp, err := http.Post(fmt.Sprintf("%s/create-channel", c.BaseURL+"/bot-api"), "application/json", bytes.NewBuffer(jsonData))
+	resp, err := http.Post(fmt.Sprintf("%s/create-channel", c.BaseURL), "application/json", bytes.NewBuffer(jsonData))
 	if err != nil || resp.StatusCode != http.StatusCreated {
 		return "", "", fmt.Errorf("bot return error status: %v", err)
 	}
@@ -72,7 +72,7 @@ func (c *DiscordHttpClient) JoinChannel(roleID string) (string, error) {
 		return "", fmt.Errorf("discord base URL is not configured")
 	}
 
-	joinURL := fmt.Sprintf("%s/join-course/%s", c.BaseURL+"/bot-api", roleID)
+	joinURL := fmt.Sprintf("%s/join-course/%s", c.BaseURL, roleID)
 
 	// Return the URL string to the service/controller
 	return joinURL, nil
