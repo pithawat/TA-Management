@@ -44,7 +44,8 @@
     # Security: Ensure only the built binary and necessary files are copied
     # Copy the compiled binary from the builder stage
     COPY --from=builder /app/ta-management .
-
+    
+    COPY --from=builder /app/prototype ./prototype
     # # Expose the application port (adjust if necessary)
     # EXPOSE 8080
 
